@@ -1,0 +1,37 @@
+package org.ever._4ever_be_alarm.infrastructure.kafka.event;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AlarmEvent extends BaseEvent {
+
+    private String alarmId;
+    private String orderId;
+    private String userId;
+    private String title;
+    private String message;
+    private AlarmType alarmType;
+    private AlarmPriority priority;
+    private java.math.BigDecimal amount;
+
+    public enum AlarmType {
+        PAYMENT_SUCCESS,
+        PAYMENT_FAILED,
+        ORDER_CONFIRMED,
+        SHIPMENT_NOTIFICATION,
+        GENERAL_NOTIFICATION
+    }
+
+    public enum AlarmPriority {
+        LOW,
+        MEDIUM,
+        HIGH,
+        URGENT
+    }
+}
