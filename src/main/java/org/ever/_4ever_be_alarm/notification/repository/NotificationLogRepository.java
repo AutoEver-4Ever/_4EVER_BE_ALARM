@@ -2,14 +2,15 @@ package org.ever._4ever_be_alarm.notification.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import org.ever._4ever_be_alarm.common.entity.NotificationLog;
+import java.util.UUID;
+import org.ever._4ever_be_alarm.notification.entity.NotificationLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NotificationLogRepository extends JpaRepository<NotificationLog, Long> {
+public interface NotificationLogRepository extends JpaRepository<NotificationLog, UUID> {
 
     /**
      * 특정 알림의 로그 조회
@@ -17,7 +18,7 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
     @Query("SELECT nl FROM NotificationLog nl " +
         "WHERE nl.notification.id = :notificationId " +
         "ORDER BY nl.createdAt DESC")
-    List<NotificationLog> findByNotificationId(@Param("notificationId") Long notificationId);
+    List<NotificationLog> findByNotificationId(@Param("notificationId") UUID notificationId);
 
     /**
      * 특정 에러 코드의 로그 조회
@@ -25,7 +26,7 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
     @Query("SELECT nl FROM NotificationLog nl " +
         "WHERE nl.notificationErrorCode.id = :errorCodeId " +
         "ORDER BY nl.createdAt DESC")
-    List<NotificationLog> findByErrorCodeId(@Param("errorCodeId") Long errorCodeId);
+    List<NotificationLog> findByErrorCodeId(@Param("errorCodeId") UUID errorCodeId);
 
     /**
      * 특정 기간 내 로그 조회
@@ -51,5 +52,13 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
         "WHERE nl.notification.id = :notificationId " +
         "ORDER BY nl.createdAt DESC " +
         "LIMIT 1")
-    NotificationLog findLatestByNotificationId(@Param("notificationId") Long notificationId);
+    NotificationLog findLatestByNotificationId(@Param("notificationId") UUID notificationId);
+
+    /**
+     * 최대 재시도 횟수에 도달한 로그 조회
+     */
+    @Query("SELECT nl FROM NotificationLog nl " +
+        "WHERE nl.retryCount >= 3 " +
+        "ORDER BY nl.createdAt DESC")
+    List<NotificationLog> findMaxRetryReachedLogs();
 }

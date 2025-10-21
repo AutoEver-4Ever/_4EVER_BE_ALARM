@@ -2,7 +2,8 @@ package org.ever._4ever_be_alarm.notification.repository;
 
 import java.util.List;
 import java.util.Optional;
-import org.ever._4ever_be_alarm.common.entity.NotificationErrorCode;
+import java.util.UUID;
+import org.ever._4ever_be_alarm.notification.entity.NotificationErrorCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NotificationErrorCodeRepository extends
-    JpaRepository<NotificationErrorCode, Long> {
+    JpaRepository<NotificationErrorCode, UUID> {
 
     /**
      * 에러 코드로 조회

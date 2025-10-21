@@ -2,14 +2,15 @@ package org.ever._4ever_be_alarm.notification.repository;
 
 import java.util.List;
 import java.util.Optional;
-import org.ever._4ever_be_alarm.common.entity.NotificationStatus;
+import java.util.UUID;
+import org.ever._4ever_be_alarm.notification.entity.NotificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NotificationStatusRepository extends JpaRepository<NotificationStatus, Long> {
+public interface NotificationStatusRepository extends JpaRepository<NotificationStatus, UUID> {
 
     /**
      * 상태명으로 조회
