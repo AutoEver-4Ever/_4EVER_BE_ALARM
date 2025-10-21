@@ -1,6 +1,5 @@
 package org.ever._4ever_be_alarm.notification.repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.ever._4ever_be_alarm.notification.entity.NotificationErrorCode;
@@ -37,11 +36,4 @@ public interface NotificationErrorCodeRepository extends
     @Query("SELECT COUNT(nec) > 0 FROM NotificationErrorCode nec WHERE nec.errorMessage = :errorMessage")
     boolean existsByErrorMessage(@Param("errorMessage") String errorMessage);
 
-    /**
-     * 활성화된 에러 코드 목록 조회 (사용 중인 에러 코드)
-     */
-    @Query("SELECT DISTINCT nec FROM NotificationErrorCode nec " +
-        "JOIN nec.notificationLogs nl " +
-        "ORDER BY nec.errorCode")
-    List<NotificationErrorCode> findActiveErrorCodes();
 }

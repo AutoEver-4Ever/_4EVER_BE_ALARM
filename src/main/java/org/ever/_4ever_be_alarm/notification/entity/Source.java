@@ -37,7 +37,11 @@ public class Source extends TimeStamp {
     @PrePersist
     public void perPersist() {
         if (this.id == null) {
+<<<<<<< Updated upstream
             this.id = Generators.timeBasedEpochGenerator().generate();
+=======
+            this.id = Generators.timeBasedEpochGenerator().generate();[[[]]]
+>>>>>>> Stashed changes
         }
     }
 }
