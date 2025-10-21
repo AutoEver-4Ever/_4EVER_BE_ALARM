@@ -1,4 +1,4 @@
-package org.ever._4ever_be_alarm.alarm.repository;
+package org.ever._4ever_be_alarm.notification.repository;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package org.ever._4ever_be_alarm.alarm.repository;
+package org.ever._4ever_be_alarm.notification.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
