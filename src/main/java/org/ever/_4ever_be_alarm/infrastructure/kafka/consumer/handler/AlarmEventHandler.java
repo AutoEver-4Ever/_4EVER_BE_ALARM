@@ -1,6 +1,6 @@
 package org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler;
 
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.AlarmEvent;
+import org.ever.event.AlarmEvent;
 
 /**
  * Payment 이벤트 처리 핸들러 인터페이스

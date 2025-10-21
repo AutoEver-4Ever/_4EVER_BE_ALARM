@@ -3,11 +3,11 @@ package org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.MultiTopicEventHandler;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.AlarmEvent;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.BusinessEvent;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.ScmEvent;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.UserEvent;
 import org.ever._4ever_be_alarm.notification.service.SseEmitterService;
+import org.ever.event.AlarmEvent;
+import org.ever.event.BusinessEvent;
+import org.ever.event.ScmEvent;
+import org.ever.event.UserEvent;
 import org.springframework.stereotype.Component;
 
 @Slf4j
