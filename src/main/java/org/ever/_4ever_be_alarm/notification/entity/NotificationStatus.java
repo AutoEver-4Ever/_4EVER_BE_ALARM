@@ -23,14 +23,14 @@ public class NotificationStatus extends TimeStamp {
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "status_name", nullable = false, unique = true, length = 100)
-    private String statusName;
+    @Column(name = "status_name", nullable = false, unique = true, length = 20)
+    private NotificationStatusEnum statusName;
 
 //    @OneToMany(mappedBy = "notificationStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    private final List<NotificationTarget> notificationTargets = new ArrayList<>();
 
     @Builder
-    public NotificationStatus(String statusName) {
+    public NotificationStatus(NotificationStatusEnum statusName) {
         this.statusName = statusName;
     }
 

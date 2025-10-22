@@ -3,6 +3,8 @@ package org.ever._4ever_be_alarm.notification.entity;
 import com.fasterxml.uuid.Generators;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -23,14 +25,15 @@ public class Channel extends TimeStamp {
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "channel_name", nullable = false, unique = true, length = 100)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "channel_name", nullable = false, unique = true, length = 30)
+    private ChannelNameEnum name;
 
 //    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    private List<NotificationChannel> notificationChannels = new ArrayList<>();
 
     @Builder
-    public Channel(String name) {
+    public Channel(ChannelNameEnum name) {
         this.name = name;
     }
 

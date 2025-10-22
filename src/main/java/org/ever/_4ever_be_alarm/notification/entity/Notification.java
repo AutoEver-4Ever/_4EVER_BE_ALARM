@@ -3,6 +3,8 @@ package org.ever._4ever_be_alarm.notification.entity;
 import com.fasterxml.uuid.Generators;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -37,8 +39,9 @@ public class Notification extends TimeStamp {
     @Column(name = "reference_id", columnDefinition = "uuid")
     private UUID referenceId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "reference_type", length = 50)
-    private String referenceType;
+    private ReferenceTypeEnum referenceType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_id", nullable = false)
@@ -59,7 +62,7 @@ public class Notification extends TimeStamp {
         String title,
         String message,
         UUID referenceId,
-        String referenceType,
+        ReferenceTypeEnum referenceType,
         Source source,
         LocalDateTime scheduledAt
     ) {
