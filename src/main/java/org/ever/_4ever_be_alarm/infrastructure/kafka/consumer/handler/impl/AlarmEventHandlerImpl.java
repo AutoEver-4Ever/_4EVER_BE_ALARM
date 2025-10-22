@@ -3,7 +3,7 @@ package org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.AlarmEventHandler;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.AlarmEvent;
+import org.ever.event.AlarmEvent;
 import org.springframework.stereotype.Component;
 
 @Slf4j

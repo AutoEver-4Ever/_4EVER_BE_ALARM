@@ -3,13 +3,19 @@ package org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.MultiTopicEventHandler;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.*;
+import org.ever._4ever_be_alarm.notification.service.SseEmitterService;
+import org.ever.event.AlarmEvent;
+import org.ever.event.BusinessEvent;
+import org.ever.event.ScmEvent;
+import org.ever.event.UserEvent;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MultiTopicEventHandlerImpl implements MultiTopicEventHandler {
+
+    private final SseEmitterService sseEmitterService;
 
     @Override
     public void handleUserEvent(UserEvent event) {
@@ -49,5 +55,11 @@ public class MultiTopicEventHandlerImpl implements MultiTopicEventHandler {
         // TODO: 실제 비즈니스 로직 구현
         // 1. 알림 전송 확인
         // 2. 알림 이력 저장
+
+//        sseEmitterService.sendEvent(
+//            event.getUserId(),
+//            "alarm-event",
+//            event
+//        );
     }
 }

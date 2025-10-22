@@ -1,17 +1,19 @@
 package org.ever._4ever_be_alarm.infrastructure.kafka.consumer;
 
+import static org.ever._4ever_be_alarm.infrastructure.kafka.config.KafkaTopicConfig.ALARM_FAILED_TOPIC;
+import static org.ever._4ever_be_alarm.infrastructure.kafka.config.KafkaTopicConfig.ALARM_REQUEST_TOPIC;
+import static org.ever._4ever_be_alarm.infrastructure.kafka.config.KafkaTopicConfig.ALARM_SENT_TOPIC;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.infrastructure.kafka.consumer.handler.AlarmEventHandler;
-import org.ever._4ever_be_alarm.infrastructure.kafka.event.AlarmEvent;
+import org.ever.event.AlarmEvent;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
-
-import static org.ever._4ever_be_alarm.infrastructure.kafka.config.KafkaTopicConfig.*;
 
 @Slf4j
 @Component
