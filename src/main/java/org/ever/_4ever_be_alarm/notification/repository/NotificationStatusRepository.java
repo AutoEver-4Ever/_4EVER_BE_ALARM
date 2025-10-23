@@ -1,6 +1,5 @@
 package org.ever._4ever_be_alarm.notification.repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.ever._4ever_be_alarm.notification.entity.NotificationStatus;
@@ -23,12 +22,4 @@ public interface NotificationStatusRepository extends JpaRepository<Notification
      */
     @Query("SELECT COUNT(ns) > 0 FROM NotificationStatus ns WHERE ns.statusName = :statusName")
     boolean existsByStatusName(@Param("statusName") String statusName);
-
-    /**
-     * 활성화된 상태 목록 조회 (사용 중인 상태)
-     */
-    @Query("SELECT DISTINCT ns FROM NotificationStatus ns " +
-        "JOIN ns.notificationTargets nt " +
-        "ORDER BY ns.statusName")
-    List<NotificationStatus> findActiveStatuses();
 }
