@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  */
 public enum ReferenceTypeEnum {
     // PR (구매부)
-    PURCHASE_REQUEST,
+    PURCHASE_REQUISITION,
     PURCHASE_ORDER,
     PR_ETC,
 
