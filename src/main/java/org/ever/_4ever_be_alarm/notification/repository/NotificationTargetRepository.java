@@ -92,21 +92,4 @@ public interface NotificationTargetRepository extends JpaRepository<Notification
         "ORDER BY nt.createdAt DESC")
     List<NotificationTarget> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate);
-
-    /**
-     * 전송되지 않은 알림 대상 조회 (send_at이 null)
-     */
-    @Query("SELECT nt FROM NotificationTarget nt " +
-        "WHERE nt.sendAt IS NULL " +
-        "ORDER BY nt.createdAt ASC")
-    List<NotificationTarget> findUnsentTargets();
-
-    /**
-     * 전송 시간 업데이트
-     */
-    @Modifying
-    @Query("UPDATE NotificationTarget nt " +
-        "SET nt.sendAt = :sendAt " +
-        "WHERE nt.id = :targetId")
-    int updateSendAt(@Param("targetId") UUID targetId, @Param("sendAt") LocalDateTime sendAt);
 }

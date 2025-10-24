@@ -38,9 +38,6 @@ public class NotificationTarget extends TimeStamp {
     @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
     private UUID userId;
 
-    @Column(name = "send_at")
-    private LocalDateTime sendAt;
-
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
@@ -66,10 +63,6 @@ public class NotificationTarget extends TimeStamp {
     public void markAsUnread() {
         this.isRead = false;
         this.readAt = null;
-    }
-
-    public void updateSendAt(LocalDateTime sendAt) {
-        this.sendAt = sendAt;
     }
 
     @PrePersist

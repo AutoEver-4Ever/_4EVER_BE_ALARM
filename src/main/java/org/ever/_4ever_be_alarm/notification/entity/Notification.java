@@ -47,6 +47,9 @@ public class Notification extends TimeStamp {
     @JoinColumn(name = "source_id", nullable = false)
     private Source source;
 
+    @Column(name = "send_at")
+    private LocalDateTime sendAt;
+
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 
@@ -64,6 +67,7 @@ public class Notification extends TimeStamp {
         UUID referenceId,
         ReferenceTypeEnum referenceType,
         Source source,
+        LocalDateTime sendAt,
         LocalDateTime scheduledAt
     ) {
         this.title = title;
@@ -71,11 +75,16 @@ public class Notification extends TimeStamp {
         this.referenceId = referenceId;
         this.referenceType = referenceType;
         this.source = source;
+        this.sendAt = sendAt;
         this.scheduledAt = scheduledAt;
     }
 
     public void updateScheduledAt(LocalDateTime scheduledAt) {
         this.scheduledAt = scheduledAt;
+    }
+
+    public void updateSendAt(LocalDateTime sendAt) {
+        this.sendAt = sendAt;
     }
 
     @PrePersist
