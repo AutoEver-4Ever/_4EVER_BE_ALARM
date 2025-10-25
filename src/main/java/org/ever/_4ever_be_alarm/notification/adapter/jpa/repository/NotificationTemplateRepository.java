@@ -1,9 +1,9 @@
-package org.ever._4ever_be_alarm.notification.repository;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.ever._4ever_be_alarm.notification.entity.NotificationTemplate;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.NotificationTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

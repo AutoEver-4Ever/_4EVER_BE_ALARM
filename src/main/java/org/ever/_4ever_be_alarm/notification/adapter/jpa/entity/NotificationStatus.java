@@ -1,10 +1,8 @@
-package org.ever._4ever_be_alarm.notification.entity;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.entity;
 
 import com.fasterxml.uuid.Generators;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -16,25 +14,24 @@ import lombok.NoArgsConstructor;
 import org.ever._4ever_be_alarm.common.entity.TimeStamp;
 
 @Entity
-@Table(name = "channel")
+@Table(name = "notification_status")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Channel extends TimeStamp {
+public class NotificationStatus extends TimeStamp {
 
     @Id
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "channel_name", nullable = false, unique = true, length = 30)
-    private ChannelNameEnum name;
+    @Column(name = "status_name", nullable = false, unique = true, length = 20)
+    private NotificationStatusEnum statusName;
 
-//    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private List<NotificationChannel> notificationChannels = new ArrayList<>();
+//    @OneToMany(mappedBy = "notificationStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private final List<NotificationTarget> notificationTargets = new ArrayList<>();
 
     @Builder
-    public Channel(ChannelNameEnum name) {
-        this.name = name;
+    public NotificationStatus(NotificationStatusEnum statusName) {
+        this.statusName = statusName;
     }
 
     @PrePersist

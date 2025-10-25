@@ -1,4 +1,4 @@
-package org.ever._4ever_be_alarm.notification.entity;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.entity;
 
 import com.fasterxml.uuid.Generators;
 import jakarta.persistence.Column;
@@ -14,24 +14,24 @@ import lombok.NoArgsConstructor;
 import org.ever._4ever_be_alarm.common.entity.TimeStamp;
 
 @Entity
-@Table(name = "notification_status")
+@Table(name = "source")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationStatus extends TimeStamp {
+public class Source extends TimeStamp {
 
     @Id
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "status_name", nullable = false, unique = true, length = 20)
-    private NotificationStatusEnum statusName;
+    @Column(name = "source_name", nullable = false, unique = true, length = 100)
+    private String sourceName;
 
-//    @OneToMany(mappedBy = "notificationStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private final List<NotificationTarget> notificationTargets = new ArrayList<>();
+//    @OneToMany(mappedBy = "source", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private final List<Notification> notifications = new ArrayList<>();
 
     @Builder
-    public NotificationStatus(NotificationStatusEnum statusName) {
-        this.statusName = statusName;
+    public Source(String sourceName) {
+        this.sourceName = sourceName;
     }
 
     @PrePersist

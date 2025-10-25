@@ -1,10 +1,10 @@
-package org.ever._4ever_be_alarm.notification.repository;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.ever._4ever_be_alarm.notification.entity.NotificationTarget;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.NotificationTarget;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

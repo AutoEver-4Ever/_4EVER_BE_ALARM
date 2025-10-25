@@ -1,4 +1,4 @@
-package org.ever._4ever_be_alarm.notification.entity;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.entity;
 
 import com.fasterxml.uuid.Generators;
 import jakarta.persistence.Column;

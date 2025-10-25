@@ -1,8 +1,8 @@
-package org.ever._4ever_be_alarm.notification.repository;
+package org.ever._4ever_be_alarm.notification.adapter.jpa.repository;
 
 import java.util.Optional;
 import java.util.UUID;
-import org.ever._4ever_be_alarm.notification.entity.Source;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.Source;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,5 +22,5 @@ public interface SourceRepository extends JpaRepository<Source, UUID> {
      */
     @Query("SELECT COUNT(s) > 0 FROM Source s WHERE s.sourceName = :sourceName")
     boolean existsBySourceName(@Param("sourceName") String sourceName);
-    
+
 }
