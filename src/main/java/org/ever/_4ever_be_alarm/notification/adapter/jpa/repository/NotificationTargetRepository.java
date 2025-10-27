@@ -77,6 +77,19 @@ public interface NotificationTargetRepository extends JpaRepository<Notification
     int markAllAsReadByUserId(@Param("userId") UUID userId, @Param("readAt") LocalDateTime readAt);
 
     /**
+     * 특정 Notification ID와 User ID로 알림 읽음 처리
+     */
+    @Modifying
+    @Query("UPDATE NotificationTarget nt " +
+        "SET nt.isRead = true, nt.readAt = :readAt " +
+        "WHERE nt.userId = :userId AND nt.notification.id = :notificationId")
+    int markAsReadByUserIdAndNotificationId(
+        @Param("userId") UUID userId,
+        @Param("notificationId") UUID notificationId,
+        @Param("readAt") LocalDateTime readAt
+    );
+
+    /**
      * 특정 상태의 알림 대상 조회
      */
     @Query("SELECT nt FROM NotificationTarget nt " +
