@@ -50,11 +50,25 @@ public interface NotificationTargetRepository extends JpaRepository<Notification
         @Param("userId") UUID userId);
 
     /**
+     * 사용자별 전체 알림 개수 조회
+     */
+    @Query("SELECT COUNT(nt) FROM NotificationTarget nt " +
+        "WHERE nt.userId = :userId")
+    Long countByUserId(@Param("userId") UUID userId);
+
+    /**
      * 사용자별 읽지 않은 알림 개수 조회
      */
     @Query("SELECT COUNT(nt) FROM NotificationTarget nt " +
         "WHERE nt.userId = :userId AND nt.isRead = false")
     Long countUnreadByUserId(@Param("userId") UUID userId);
+
+    /**
+     * 사용자별 읽음 상태에 따른 알림 개수 조회
+     */
+    @Query("SELECT COUNT(nt) FROM NotificationTarget nt " +
+        "WHERE nt.userId = :userId AND nt.isRead = :isRead")
+    Long countByUserIdAndIsRead(@Param("userId") UUID userId, @Param("isRead") boolean isRead);
 
     /**
      * 사용자별 알림 읽음 처리

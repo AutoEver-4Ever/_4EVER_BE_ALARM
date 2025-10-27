@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ever._4ever_be_alarm.common.response.PageResponseDto;
 import org.ever._4ever_be_alarm.common.validation.AllowedValues;
 import org.ever._4ever_be_alarm.common.validation.ValidUuidV7;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.request.NotificationMarkReadRequestDto;
@@ -13,7 +14,6 @@ import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.Notificati
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationQueryUseCase;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +37,7 @@ public class NotificationController {
      * 알림 목록 조회
      */
     @GetMapping("/list/{userId}")
-    public ResponseEntity<org.ever._4ever_be_alarm.common.response.PageResponseDto<NotificationListResponseDto>> getNotificationList(
+    public ResponseEntity<PageResponseDto<NotificationListResponseDto>> getNotificationList(
         @ValidUuidV7
         @PathVariable("userId")
         UUID userId,
@@ -75,7 +75,7 @@ public class NotificationController {
             userId, sortBy, order, source, page, size
         );
 
-        var result = notificationQueryUseCase.getNotifications(
+        var result = notificationQueryUseCase.getNotificationPage(
             userId, sortBy, order, source, page, size
         );
 
@@ -91,24 +91,23 @@ public class NotificationController {
     public ResponseEntity<NotificationCountResponseDto> getNotificationCount(
         @ValidUuidV7
         @PathVariable("userId")
-        String userId,
+        UUID userId,
         @AllowedValues(
             allowedValues = {"READ", "UNREAD"},
             ignoreCase = true,
             message = "유효하지 않은 status 값입니다. 허용값: READ, UNREAD"
         )
-        @RequestParam(name = "status", required = false, defaultValue = "UNREAD") String status
+        @RequestParam(name = "status", required = false, defaultValue = "UNREAD")
+        String status
     ) {
         log.info("알림 갯수 조회 요청 - userId: {}, status: {}", userId, status);
 
-        UUID userUuid = UUID.fromString(userId);
-        Integer count = notificationQueryUseCase.getUnreadCount(userUuid);
+        NotificationCountResponseDto response = notificationQueryUseCase.getNotificationCount(
+            userId,
+            status
+        );
 
-        NotificationCountResponseDto response = NotificationCountResponseDto.builder()
-            .count(count)
-            .build();
-
-        log.info("알림 갯수 조회 성공 - userId: {}, count: {}", userId, count);
+        log.info("알림 갯수 조회 성공 - userId: {}, count: {}", userId, response.getCount());
         return ResponseEntity.ok(response);
     }
 
@@ -121,20 +120,21 @@ public class NotificationController {
         @RequestBody
         NotificationMarkReadRequestDto request
     ) {
-        log.info("알림 읽음 처리 요청 - userId: {}, notificationIds: {}",
-            request.getUserId(), request.getNotificationIds());
+        log.info(
+            "알림 읽음 처리 요청 - userId: {}, notificationIds: {}",
+            request.getUserId(), request.getNotificationIds()
+        );
 
-        Integer processedCount = notificationQueryUseCase.markAsReadList(
+        NotificationReadResponseDto response = notificationQueryUseCase.markAsReadList(
             request.getUserId(),
             request.getNotificationIds()
         );
 
-        NotificationReadResponseDto response = NotificationReadResponseDto.builder()
-            .processedCount(processedCount)
-            .build();
+        log.info(
+            "알림 읽음 처리 성공 - userId: {}, processedCount: {}",
+            request.getUserId(), response.getProcessedCount()
+        );
 
-        log.info("알림 읽음 처리 성공 - userId: {}, processedCount: {}",
-            request.getUserId(), processedCount);
         return ResponseEntity.ok(response);
     }
 
@@ -143,27 +143,20 @@ public class NotificationController {
      */
     @PatchMapping("/all/read")
     public ResponseEntity<NotificationReadResponseDto> markReadAll(
-        @RequestParam("userId") String userId
+        @ValidUuidV7
+        @RequestParam("userId")
+        UUID userId
     ) {
         log.info("전체 알림 읽음 처리 요청 - userId: {}", userId);
 
-        try {
-            UUID userUuid = UUID.fromString(userId);
-            Integer processedCount = notificationQueryUseCase.markAsReadAll(userUuid);
+        NotificationReadResponseDto response = notificationQueryUseCase.markAsReadAll(userId);
 
-            NotificationReadResponseDto response = NotificationReadResponseDto.builder()
-                .processedCount(processedCount)
-                .build();
+        log.info(
+            "전체 알림 읽음 처리 성공 - userId: {}, processedCount: {}",
+            userId, response.getProcessedCount()
+        );
 
-            log.info("전체 알림 읽음 처리 성공 - userId: {}, processedCount: {}", userId, processedCount);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 userId: {}", userId, e);
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("전체 알림 읽음 처리 실패 - userId: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -171,29 +164,23 @@ public class NotificationController {
      */
     @PatchMapping("/{notificationId}/read")
     public ResponseEntity<NotificationReadResponseDto> markReadOne(
-        @PathVariable("notificationId") String notificationId,
-        @RequestParam("userId") String userId
+        @ValidUuidV7
+        @PathVariable("notificationId")
+        UUID notificationId,
+        @ValidUuidV7
+        @RequestParam("userId")
+        UUID userId
     ) {
         log.info("단일 알림 읽음 처리 요청 - userId: {}, notificationId: {}", userId, notificationId);
 
-        try {
-            UUID userUuid = UUID.fromString(userId);
-            boolean success = notificationQueryUseCase.markAsReadOne(userUuid, notificationId);
+        NotificationReadResponseDto
+            response = notificationQueryUseCase.markAsReadOne(userId, notificationId);
 
-            NotificationReadResponseDto response = NotificationReadResponseDto.builder()
-                .processedCount(success ? 1 : 0)
-                .build();
+        log.info(
+            "단일 알림 읽음 처리 성공 - userId: {}, notificationId: {}, success: {}",
+            userId, notificationId, response
+        );
 
-            log.info("단일 알림 읽음 처리 성공 - userId: {}, notificationId: {}, success: {}",
-                userId, notificationId, success);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 userId 또는 notificationId", e);
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("단일 알림 읽음 처리 실패 - userId: {}, notificationId: {}", userId, notificationId,
-                e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return ResponseEntity.ok(response);
     }
 }

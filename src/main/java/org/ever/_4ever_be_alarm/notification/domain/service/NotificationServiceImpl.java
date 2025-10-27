@@ -5,7 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
+import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationQueryUseCase;
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationSendUseCase;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
@@ -27,43 +30,48 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
 
     @Transactional(readOnly = true)
     @Override
-    public PageResponseDto<NotificationListResponseDto> getNotifications(
+    public PageResponseDto<NotificationListResponseDto> getNotificationPage(
         UUID userId,
         String sortBy,
         String order,
         String source,
         int page, int size
     ) {
+        SourceTypeEnum sourceType = SourceTypeEnum.fromString(source);
+
         return notificationRepository
-            .findNotificationTargetsByUserId(userId, sortBy, order, source, page, size);
+            .getNotificationList(userId, sortBy, order, sourceType, page, size);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Integer getUnreadCount(UUID userId) {
-        return notificationRepository.countUnreadByUserId(userId);
-    }
-
-    @Override
-    public Integer getNotificationCount(UUID userId, String status) {
-        return 0;
+    public NotificationCountResponseDto getNotificationCount(UUID userId, String status) {
+        if (status == null || status.isEmpty()) { // 전체 카운트
+            return notificationRepository.countByUserId(userId);
+        } else if (status.equalsIgnoreCase("READ")) { // 읽음 카운트
+            return notificationRepository.countByUserIdAndStatus(userId, true);
+        } else if (status.equalsIgnoreCase("UNREAD")) { // 안읽음 카운트
+            return notificationRepository.countByUserIdAndStatus(userId, false);
+        } else { // 잘못된 상태 값
+            throw new IllegalArgumentException("Invalid status value: " + status);
+        }
     }
 
     @Transactional
     @Override
-    public Integer markAsReadList(UUID userId, List<UUID> notificationIds) {
+    public NotificationReadResponseDto markAsReadList(UUID userId, List<UUID> notificationIds) {
         return notificationRepository.markAsReadList(userId, notificationIds);
     }
 
     @Transactional
     @Override
-    public Integer markAsReadAll(UUID userId) {
+    public NotificationReadResponseDto markAsReadAll(UUID userId) {
         return notificationRepository.markAsReadAll(userId);
     }
 
     @Transactional
     @Override
-    public Boolean markAsReadOne(UUID userId, String notificationId) {
+    public NotificationReadResponseDto markAsReadOne(UUID userId, UUID notificationId) {
         return notificationRepository.markAsRead(userId, notificationId);
     }
 

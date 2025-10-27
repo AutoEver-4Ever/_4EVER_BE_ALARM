@@ -17,8 +17,11 @@ import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.Notification
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.NotificationTargetRepository;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.NotificationTemplateRepository;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.SourceRepository;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
 import org.ever._4ever_be_alarm.notification.domain.model.Notification;
+import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationRepositoryPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,15 +56,16 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
     }
 
     @Override
-    public PageResponseDto<NotificationListResponseDto> findNotificationTargetsByUserId(
+    public PageResponseDto<NotificationListResponseDto> getNotificationList(
         UUID userId,
         String sortBy,
         String order,
-        String source,
+        SourceTypeEnum source,
         int page, int size
     ) {
         // 정렬 설정
-        Sort sort = "asc".equalsIgnoreCase(order) ? Sort.by(Sort.Direction.ASC, "createdAt")
+        Sort sort = "asc".equalsIgnoreCase(order)
+            ? Sort.by(Sort.Direction.ASC, "createdAt")
             : Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -71,12 +75,12 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
 
         // Source 필터 적용
         List<NotificationTarget> filteredTargets = notificationTargets.getContent();
-        if (source != null && !source.isBlank()) {
-            filteredTargets = filteredTargets.stream()
-                .filter(
-                    nt -> source.equalsIgnoreCase(nt.getNotification().getSource().getSourceName()))
-                .collect(Collectors.toList());
-        }
+//        if (source != null && !source.isBlank()) {
+//            filteredTargets = filteredTargets.stream()
+//                .filter(
+//                    nt -> source.equalsIgnoreCase(nt.getNotification().getSource().getSourceName()))
+//                .collect(Collectors.toList());
+//        }
 
         // NotificationListResponseDto로 변환
         List<NotificationListResponseDto> items = filteredTargets.stream()
@@ -99,48 +103,64 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
     }
 
     @Override
-    public Integer countUnreadByUserId(UUID userId) {
-        return Math.toIntExact(notificationTargetRepository.countUnreadByUserId(userId));
+    public NotificationCountResponseDto countUnreadByUserId(UUID userId) {
+        return NotificationCountResponseDto.builder()
+            .count(Math.toIntExact(notificationTargetRepository.countUnreadByUserId(userId)))
+            .build();
+    }
+
+    @Override
+    public NotificationCountResponseDto countByUserId(UUID userId) {
+        return NotificationCountResponseDto.builder()
+            .count(Math.toIntExact(notificationTargetRepository.countByUserId(userId)))
+            .build();
+    }
+
+    @Override
+    public NotificationCountResponseDto countByUserIdAndStatus(UUID userId, Boolean isRead) {
+        return NotificationCountResponseDto.builder()
+            .count(Math.toIntExact(
+                notificationTargetRepository.countByUserIdAndIsRead(userId, isRead)))
+            .build();
     }
 
     @Override
     @Transactional
-    public Integer markAsReadList(UUID userId, List<UUID> notificationIds) {
+    public NotificationReadResponseDto markAsReadList(UUID userId, List<UUID> notificationIds) {
         int totalProcessed = 0;
         LocalDateTime readAt = LocalDateTime.now();
 
         for (UUID notificationId : notificationIds) {
-            try {
-                int updated = notificationTargetRepository.markAsReadByUserIdAndNotificationId(
-                    userId, notificationId, readAt);
-                totalProcessed += updated;
-            } catch (IllegalArgumentException e) {
-                // 잘못된 UUID 형식은 무시하고 계속 진행
-            }
+            int updated = notificationTargetRepository
+                .markAsReadByUserIdAndNotificationId(userId, notificationId, readAt);
+            totalProcessed += updated;
         }
 
-        return totalProcessed;
+        return NotificationReadResponseDto.builder()
+            .processedCount(totalProcessed)
+            .build();
     }
 
     @Override
     @Transactional
-    public Integer markAsReadAll(UUID userId) {
+    public NotificationReadResponseDto markAsReadAll(UUID userId) {
         LocalDateTime readAt = LocalDateTime.now();
-        return notificationTargetRepository.markAllAsReadByUserId(userId, readAt);
+        int totalProcessed = notificationTargetRepository.markAllAsReadByUserId(userId, readAt);
+
+        return NotificationReadResponseDto.builder()
+            .processedCount(totalProcessed)
+            .build();
     }
 
     @Override
     @Transactional
-    public Boolean markAsRead(UUID userId, String notificationId) {
-        try {
-            UUID notificationUuid = UUID.fromString(notificationId);
-            LocalDateTime readAt = LocalDateTime.now();
-            int updated = notificationTargetRepository.markAsReadByUserIdAndNotificationId(userId,
-                notificationUuid, readAt);
-            return updated > 0;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+    public NotificationReadResponseDto markAsRead(UUID userId, UUID notificationId) {
+        LocalDateTime readAt = LocalDateTime.now();
+        int updated = notificationTargetRepository
+            .markAsReadByUserIdAndNotificationId(userId, notificationId, readAt);
+        return NotificationReadResponseDto.builder()
+            .processedCount(updated)
+            .build();
     }
 
     private NotificationListResponseDto toNotificationListResponseDto(NotificationTarget target) {
@@ -150,11 +170,15 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
             .notificationTitle(notification.getTitle())
             .notificationMessage(notification.getMessage())
             .linkType(
-                notification.getReferenceType() != null ? notification.getReferenceType().toString()
-                    : null)
-            .linkId(notification.getReferenceId() != null ? notification.getReferenceId().toString()
-                : null)
-            .source(notification.getSource().getSourceName())
+                notification.getReferenceType() != null
+                    ? notification.getReferenceType().toString()
+                    : null
+            )
+            .linkId(notification.getReferenceId() != null
+                ? notification.getReferenceId().toString()
+                : null
+            )
+            .source(String.valueOf(notification.getSource().getSourceName()))
             .createdAt(notification.getCreatedAt())
             .build();
     }

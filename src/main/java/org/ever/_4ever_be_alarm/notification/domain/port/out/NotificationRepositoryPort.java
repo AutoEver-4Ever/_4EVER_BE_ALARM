@@ -3,8 +3,11 @@ package org.ever._4ever_be_alarm.notification.domain.port.out;
 import java.util.List;
 import java.util.UUID;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
 import org.ever._4ever_be_alarm.notification.domain.model.Notification;
+import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 
 public interface NotificationRepositoryPort {
 
@@ -12,15 +15,19 @@ public interface NotificationRepositoryPort {
 
     List<Notification> findByUserId(String userId);
 
-    PageResponseDto<NotificationListResponseDto> findNotificationTargetsByUserId(
-        UUID userId, String sortBy, String order, String source, int page, int size
+    PageResponseDto<NotificationListResponseDto> getNotificationList(
+        UUID userId, String sortBy, String order, SourceTypeEnum source, int page, int size
     );
 
-    Integer countUnreadByUserId(UUID userId);
+    NotificationCountResponseDto countUnreadByUserId(UUID userId);
 
-    Integer markAsReadList(UUID userId, List<UUID> notificationIds);
+    NotificationCountResponseDto countByUserId(UUID userId);
 
-    Integer markAsReadAll(UUID userId);
+    NotificationCountResponseDto countByUserIdAndStatus(UUID userId, Boolean isRead);
 
-    Boolean markAsRead(UUID userId, String notificationId);
+    NotificationReadResponseDto markAsReadList(UUID userId, List<UUID> notificationIds);
+
+    NotificationReadResponseDto markAsReadAll(UUID userId);
+
+    NotificationReadResponseDto markAsRead(UUID userId, UUID notificationId);
 }
