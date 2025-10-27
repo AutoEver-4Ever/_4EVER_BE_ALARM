@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.ever._4ever_be_alarm.common.entity.TimeStamp;
+import org.ever._4ever_be_alarm.notification.domain.model.constants.NotificationStatusEnum;
 
 @Entity
 @Table(name = "notification_status")

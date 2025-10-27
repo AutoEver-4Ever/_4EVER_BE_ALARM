@@ -1,4 +1,4 @@
-package org.ever._4ever_be_alarm.notification.adapter.jpa.entity;
+package org.ever._4ever_be_alarm.notification.domain.model.constants;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -7,7 +7,8 @@ import java.util.stream.Collectors;
 
 public enum ChannelNameEnum {
     SSE, // 서버 발송 이벤트
-    PUSH_NOTIFICATION, // 푸시 알림
+    FCM_PUSH, // FCM 푸시
+    WEB_PUSH, // 웹 푸시
     EMAIL, // 이메일
     SMS, // 문자 메시지
     SLACK, // 슬랙
