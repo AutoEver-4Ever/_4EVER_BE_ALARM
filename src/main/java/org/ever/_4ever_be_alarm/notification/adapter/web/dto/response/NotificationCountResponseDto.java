@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NotificationCountResponseDto {
 
-    private Integer count;
+    private int count;
 }
 

@@ -3,7 +3,6 @@ package org.ever._4ever_be_alarm.notification.adapter.web.in;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
@@ -40,7 +39,7 @@ public class NotificationController {
     public ResponseEntity<PageResponseDto<NotificationListResponseDto>> getNotificationList(
         @ValidUuidV7
         @PathVariable("userId")
-        UUID userId,
+        String userId,
         @AllowedValues(
             allowedValues = {"createdAt"},
             ignoreCase = true,
@@ -91,7 +90,7 @@ public class NotificationController {
     public ResponseEntity<NotificationCountResponseDto> getNotificationCount(
         @ValidUuidV7
         @PathVariable("userId")
-        UUID userId,
+        String userId,
         @AllowedValues(
             allowedValues = {"READ", "UNREAD"},
             ignoreCase = true,
@@ -145,7 +144,7 @@ public class NotificationController {
     public ResponseEntity<NotificationReadResponseDto> markReadAll(
         @ValidUuidV7
         @RequestParam("userId")
-        UUID userId
+        String userId
     ) {
         log.info("전체 알림 읽음 처리 요청 - userId: {}", userId);
 
@@ -166,10 +165,10 @@ public class NotificationController {
     public ResponseEntity<NotificationReadResponseDto> markReadOne(
         @ValidUuidV7
         @PathVariable("notificationId")
-        UUID notificationId,
+        String notificationId,
         @ValidUuidV7
         @RequestParam("userId")
-        UUID userId
+        String userId
     ) {
         log.info("단일 알림 읽음 처리 요청 - userId: {}, notificationId: {}", userId, notificationId);
 

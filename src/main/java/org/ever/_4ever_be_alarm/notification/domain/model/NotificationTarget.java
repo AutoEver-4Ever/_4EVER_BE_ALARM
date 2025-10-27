@@ -21,7 +21,7 @@ public class NotificationTarget {
 
     private UUID userId;
 
-    private Boolean isRead = false;
+    private Boolean isRead;
 
     private LocalDateTime readAt;
 

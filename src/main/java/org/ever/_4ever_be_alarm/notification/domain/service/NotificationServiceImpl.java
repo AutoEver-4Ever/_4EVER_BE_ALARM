@@ -25,13 +25,13 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
     private final Map<String, NotificationDispatchPort> notificationDispatchAdapters;
     @Value("${dispatch.strategy-names.sse}")
     private String SSE_STRATEGY_NAME;
-    @Value("${dispatch.strategy-names.push}")
-    private String PUSH_STRATEGY_NAME;
+    @Value("${dispatch.strategy-names.app-push}")
+    private String APP_PUSH_STRATEGY_NAME;
 
     @Transactional(readOnly = true)
     @Override
     public PageResponseDto<NotificationListResponseDto> getNotificationPage(
-        UUID userId,
+        String userId,
         String sortBy,
         String order,
         String source,
@@ -39,19 +39,23 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
     ) {
         SourceTypeEnum sourceType = SourceTypeEnum.fromString(source);
 
+        UUID userUuid = UUID.fromString(userId);
+
         return notificationRepository
-            .getNotificationList(userId, sortBy, order, sourceType, page, size);
+            .getNotificationList(userUuid, sortBy, order, sourceType, page, size);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public NotificationCountResponseDto getNotificationCount(UUID userId, String status) {
+    public NotificationCountResponseDto getNotificationCount(String userId, String status) {
+        UUID userUuid = UUID.fromString(userId);
+
         if (status == null || status.isEmpty()) { // 전체 카운트
-            return notificationRepository.countByUserId(userId);
+            return notificationRepository.countByUserId(userUuid);
         } else if (status.equalsIgnoreCase("READ")) { // 읽음 카운트
-            return notificationRepository.countByUserIdAndStatus(userId, true);
+            return notificationRepository.countByUserIdAndStatus(userUuid, true);
         } else if (status.equalsIgnoreCase("UNREAD")) { // 안읽음 카운트
-            return notificationRepository.countByUserIdAndStatus(userId, false);
+            return notificationRepository.countByUserIdAndStatus(userUuid, false);
         } else { // 잘못된 상태 값
             throw new IllegalArgumentException("Invalid status value: " + status);
         }
@@ -59,20 +63,30 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
 
     @Transactional
     @Override
-    public NotificationReadResponseDto markAsReadList(UUID userId, List<UUID> notificationIds) {
-        return notificationRepository.markAsReadList(userId, notificationIds);
+    public NotificationReadResponseDto markAsReadList(String userId, List<String> notificationIds) {
+        UUID userUuid = UUID.fromString(userId);
+        List<UUID> notificationUuidList = notificationIds.stream()
+            .map(UUID::fromString)
+            .toList();
+
+        return notificationRepository.markAsReadList(userUuid, notificationUuidList);
     }
 
     @Transactional
     @Override
-    public NotificationReadResponseDto markAsReadAll(UUID userId) {
-        return notificationRepository.markAsReadAll(userId);
+    public NotificationReadResponseDto markAsReadAll(String userId) {
+        UUID userUuid = UUID.fromString(userId);
+
+        return notificationRepository.markAsReadAll(userUuid);
     }
 
     @Transactional
     @Override
-    public NotificationReadResponseDto markAsReadOne(UUID userId, UUID notificationId) {
-        return notificationRepository.markAsRead(userId, notificationId);
+    public NotificationReadResponseDto markAsReadOne(String userId, String notificationId) {
+        UUID userUuid = UUID.fromString(userId);
+        UUID notificationUuid = UUID.fromString(notificationId);
+
+        return notificationRepository.markAsRead(userUuid, notificationUuid);
     }
 
     @Override
@@ -82,7 +96,7 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
 
         if (userId.isEmpty()) {
             NotificationDispatchPort pushAlarm = notificationDispatchAdapters.get(
-                PUSH_STRATEGY_NAME);
+                APP_PUSH_STRATEGY_NAME);
             // TODO: Push 알림 전송 로직 구현
         }
         // TODO: SSE 알림 전송 로직 구현
