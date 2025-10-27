@@ -1,15 +1,22 @@
 package org.ever._4ever_be_alarm.notification.domain.port.in;
 
-
 import java.util.List;
-import org.ever._4ever_be_alarm.notification.domain.model.Notification;
+import java.util.UUID;
+import org.ever._4ever_be_alarm.common.response.PageResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 
 public interface NotificationQueryUseCase {
 
-    List<Notification> getNotifications(String userId, int page, int size);
+    PageResponseDto<NotificationListResponseDto> getNotifications(UUID userId, String sortBy,
+        String order, String source, int page, int size);
 
-    Integer getUnreadCount(String userId);
+    Integer getUnreadCount(UUID userId);
 
-    Boolean markAsRead(String userId, String notificationId);
+    Integer getNotificationCount(UUID userId, String status);
 
+    Integer markAsReadList(UUID userId, List<UUID> notificationIds);
+
+    Integer markAsReadAll(UUID userId);
+
+    Boolean markAsReadOne(UUID userId, String notificationId);
 }
