@@ -117,7 +117,8 @@ public class MultiTopicEventListener {
     private void handlePaymentEvent(String message) {
         try {
             AlarmEvent event = objectMapper.readValue(message, AlarmEvent.class);
-            log.info("결제 이벤트 처리 중 - UserId: {}, Type: {}", event.getUserId(), event.getAlarmType());
+            log.info("결제 이벤트 처리 중 - EventId: {}, AlarmId: {}", event.getEventId(),
+                event.getAlarmId());
 
             // Payment 이벤트 처리 로직
             multiTopicEventHandler.handleAlarmEvent(event);
