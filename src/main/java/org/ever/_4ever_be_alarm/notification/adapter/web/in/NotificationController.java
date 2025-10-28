@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
 import org.ever._4ever_be_alarm.common.validation.AllowedValues;
 import org.ever._4ever_be_alarm.common.validation.ValidUuidV7;
+import org.ever._4ever_be_alarm.notification.adapter.web.dto.request.NotificationMarkReadAllAndOneRequestDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.request.NotificationMarkReadRequestDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
@@ -142,10 +143,12 @@ public class NotificationController {
      */
     @PatchMapping("/all/read")
     public ResponseEntity<NotificationReadResponseDto> markReadAll(
-        @ValidUuidV7
-        @RequestParam("userId")
-        String userId
+        @Valid
+        @RequestBody
+        NotificationMarkReadAllAndOneRequestDto request
     ) {
+        String userId = request.getUserId();
+
         log.info("전체 알림 읽음 처리 요청 - userId: {}", userId);
 
         NotificationReadResponseDto response = notificationQueryUseCase.markAsReadAll(userId);
@@ -166,10 +169,12 @@ public class NotificationController {
         @ValidUuidV7
         @PathVariable("notificationId")
         String notificationId,
-        @ValidUuidV7
-        @RequestParam("userId")
-        String userId
+        @Valid
+        @RequestBody
+        NotificationMarkReadAllAndOneRequestDto request
     ) {
+        String userId = request.getUserId();
+
         log.info("단일 알림 읽음 처리 요청 - userId: {}, notificationId: {}", userId, notificationId);
 
         NotificationReadResponseDto
