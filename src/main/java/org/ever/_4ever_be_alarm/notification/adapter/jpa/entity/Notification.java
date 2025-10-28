@@ -26,7 +26,6 @@ import org.ever._4ever_be_alarm.notification.domain.model.constants.ReferenceTyp
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends TimeStamp {
 
-
     @Id
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
