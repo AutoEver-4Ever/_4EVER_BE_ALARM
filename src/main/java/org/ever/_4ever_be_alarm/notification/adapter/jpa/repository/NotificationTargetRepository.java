@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.NotificationTarget;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,8 +18,9 @@ import org.springframework.stereotype.Repository;
 public interface NotificationTargetRepository extends JpaRepository<NotificationTarget, UUID> {
 
     /**
-     * 사용자별 알림 대상 조회
+     * 사용자별 알림 대상 조회 (EntityGraph로 N+1 문제 해결)
      */
+    @EntityGraph(attributePaths = {"notification", "notification.source"})
     @Query("SELECT nt FROM NotificationTarget nt " +
         "WHERE nt.userId = :userId " +
         "ORDER BY nt.createdAt DESC")
@@ -31,6 +33,19 @@ public interface NotificationTargetRepository extends JpaRepository<Notification
         "WHERE nt.userId = :userId AND nt.isRead = false " +
         "ORDER BY nt.createdAt DESC")
     List<NotificationTarget> findUnreadByUserId(@Param("userId") UUID userId);
+
+    /**
+     * 사용자별 및 소스별 알림 대상 조회 (EntityGraph로 N+1 문제 해결)
+     */
+    @EntityGraph(attributePaths = {"notification", "notification.source"})
+    @Query("SELECT nt FROM NotificationTarget nt " +
+        "JOIN nt.notification n " +
+        "JOIN n.source s " +
+        "WHERE nt.userId = :userId AND s.sourceName = :sourceName")
+    Page<NotificationTarget> findByUserIdAndSource(
+        @Param("userId") UUID userId,
+        @Param("sourceName") String sourceName,
+        Pageable pageable);
 
     /**
      * 특정 알림의 모든 대상 조회

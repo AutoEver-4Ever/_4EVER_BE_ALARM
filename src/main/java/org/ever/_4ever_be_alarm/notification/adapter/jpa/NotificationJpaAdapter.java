@@ -63,42 +63,41 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
         SourceTypeEnum source,
         int page, int size
     ) {
-        // 정렬 설정
-        Sort sort = "asc".equalsIgnoreCase(order)
-            ? Sort.by(Sort.Direction.ASC, "createdAt")
-            : Sort.by(Sort.Direction.DESC, "createdAt");
+        // sortBy는 기본값 "createdAt", 나중에 동적으로 변경 가능하도록 파라미터 유지
+        String sortField = (sortBy == null || sortBy.isBlank()) ? "createdAt" : sortBy;
+        
+        // order는 기본값 DESC, asc가 명시적으로 지정된 경우만 ASC
+        Sort.Direction direction = "asc".equalsIgnoreCase(order)
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+        
+        Sort sort = Sort.by(direction, sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // NotificationTarget 조회
-        Page<NotificationTarget> notificationTargets = notificationTargetRepository.findByUserId(
-            userId, pageable);
-
-        // Source 필터 적용
-        List<NotificationTarget> filteredTargets = notificationTargets.getContent();
-//        if (source != null && !source.isBlank()) {
-//            filteredTargets = filteredTargets.stream()
-//                .filter(
-//                    nt -> source.equalsIgnoreCase(nt.getNotification().getSource().getSourceName()))
-//                .collect(Collectors.toList());
-//        }
+        // Source 필터링: null이거나 UNKNOWN이면 전체 조회, 그 외에는 해당 source만 조회
+        Page<NotificationTarget> notificationTargets;
+        if (source == null || source == SourceTypeEnum.UNKNOWN) {
+            notificationTargets = notificationTargetRepository.findByUserId(userId, pageable);
+        } else {
+            notificationTargets = notificationTargetRepository.findByUserIdAndSource(
+                userId, source.name(), pageable);
+        }
 
         // NotificationListResponseDto로 변환
-        List<NotificationListResponseDto> items = filteredTargets.stream()
+        List<NotificationListResponseDto> items = notificationTargets.getContent().stream()
             .map(this::toNotificationListResponseDto)
             .collect(Collectors.toList());
 
-        // PageDto 생성
-        PageDto pageDto = PageDto.builder()
-            .number(notificationTargets.getNumber())
-            .size(notificationTargets.getSize())
-            .totalElements((int) notificationTargets.getTotalElements())
-            .totalPages(notificationTargets.getTotalPages())
-            .hasNext(notificationTargets.hasNext())
-            .build();
-
+        // PageResponseDto 생성
         return PageResponseDto.<NotificationListResponseDto>builder()
             .items(items)
-            .page(pageDto)
+            .page(PageDto.builder()
+                .number(notificationTargets.getNumber())
+                .size(notificationTargets.getSize())
+                .totalElements((int) notificationTargets.getTotalElements())
+                .totalPages(notificationTargets.getTotalPages())
+                .hasNext(notificationTargets.hasNext())
+                .build())
             .build();
     }
 
@@ -180,6 +179,7 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
             )
             .source(String.valueOf(notification.getSource().getSourceName()))
             .createdAt(notification.getCreatedAt())
+            .isRead(target.getIsRead())
             .build();
     }
 }
