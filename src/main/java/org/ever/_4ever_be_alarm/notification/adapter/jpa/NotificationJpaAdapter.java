@@ -20,7 +20,7 @@ import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.SourceReposi
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
-import org.ever._4ever_be_alarm.notification.domain.model.Notification;
+import org.ever._4ever_be_alarm.notification.domain.model.Noti;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationRepositoryPort;
 import org.springframework.data.domain.Page;

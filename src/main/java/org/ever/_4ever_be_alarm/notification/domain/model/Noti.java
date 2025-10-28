@@ -11,7 +11,7 @@ import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEn
 @Data
 @Builder
 @Getter
-public class Notification {
+public class Noti {
 
     private UUID id;
     private UUID targetId;

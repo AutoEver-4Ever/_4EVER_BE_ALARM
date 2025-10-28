@@ -6,14 +6,14 @@ import org.ever._4ever_be_alarm.common.response.PageResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationCountResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
-import org.ever._4ever_be_alarm.notification.domain.model.Notification;
+import org.ever._4ever_be_alarm.notification.domain.model.Noti;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 
 public interface NotificationRepositoryPort {
 
-    Notification save(Notification alarm);
+    Noti save(Noti alarm);
 
-    List<Notification> findByUserId(String userId);
+    List<Noti> findByUserId(String userId);
 
     PageResponseDto<NotificationListResponseDto> getNotificationList(
         UUID userId, String sortBy, String order, SourceTypeEnum source, int page, int size
