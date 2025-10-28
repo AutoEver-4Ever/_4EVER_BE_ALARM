@@ -2,12 +2,16 @@ package org.ever._4ever_be_alarm.notification.adapter.jpa;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.ever._4ever_be_alarm.common.response.PageDto;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.Notification;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.NotificationStatus;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.NotificationTarget;
+import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.Source;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.ChannelRepository;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.NotificationChannelRepository;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.repository.NotificationErrorCodeRepository;
@@ -21,6 +25,7 @@ import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.Notificati
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
 import org.ever._4ever_be_alarm.notification.domain.model.Noti;
+import org.ever._4ever_be_alarm.notification.domain.model.constants.NotificationStatusEnum;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationRepositoryPort;
 import org.springframework.data.domain.Page;
@@ -32,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NotificationJpaAdapter implements NotificationRepositoryPort {
 
     private final ChannelRepository channelRepository;
@@ -46,12 +52,65 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
 //    private final NotificationMapper notificationMapper;
 
     @Override
-    public Notification save(Notification alarm) {
-        return null;
+    @Transactional
+    public Noti save(Noti alarm) {
+        // TODO Notification(domain) -> Entity 변환 후 저장 로직 구현
+
+        Optional<Source> tempSource = sourceRepository.findBySourceName(
+            SourceTypeEnum.fromString(alarm.getSource().name()));
+
+        Source source;
+        if (tempSource.isPresent()) {
+            source = tempSource.get();
+        } else {
+            // Source 생성 및 저장을 하면 안되는 이슈가 있어서 주석 처리
+//            Source newSource = Source.builder()
+//                .sourceName(SourceTypeEnum.fromString(alarm.getSource().name()))
+//                .build();
+//            source = sourceRepository.save(newSource);
+            throw new IllegalStateException("Source를 찾을 수 없습니다."); // TODO 예외 처리 개선
+        }
+
+        Notification notification = Notification.builder()
+            .id(alarm.getId())
+            .title(alarm.getTitle())
+            .message(alarm.getMessage())
+            .referenceId(alarm.getReferenceId())
+            .referenceType(alarm.getReferenceType())
+            .source(source)
+            .sendAt(LocalDateTime.now())
+            .scheduledAt(Optional.ofNullable(alarm.getScheduledAt()).orElse(LocalDateTime.now()))
+            .build();
+
+        notificationRepository.save(notification);
+
+        NotificationStatus notificationStatus = notificationStatusRepository.findByStatusName(
+            NotificationStatusEnum.PENDING).get();
+
+        NotificationTarget target = NotificationTarget.builder()
+            .notification(notification)
+            .notificationStatus(notificationStatus)
+            .userId(alarm.getTargetId())
+            .build();
+
+        notificationTargetRepository.save(target);
+
+        return Noti.builder()
+            .id(notification.getId())
+            .targetId(target.getUserId())
+            .targetType(alarm.getTargetType())
+            .title(notification.getTitle())
+            .message(notification.getMessage())
+            .referenceId(notification.getReferenceId())
+            .referenceType(notification.getReferenceType())
+            .source(SourceTypeEnum.fromString(notification.getSource().getSourceName().name()))
+            .sendAt(notification.getSendAt())
+            .scheduledAt(notification.getScheduledAt())
+            .build();
     }
 
     @Override
-    public List<Notification> findByUserId(String userId) {
+    public List<Noti> findByUserId(String userId) {
         return List.of();
     }
 
@@ -65,12 +124,12 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
     ) {
         // sortBy는 기본값 "createdAt", 나중에 동적으로 변경 가능하도록 파라미터 유지
         String sortField = (sortBy == null || sortBy.isBlank()) ? "createdAt" : sortBy;
-        
+
         // order는 기본값 DESC, asc가 명시적으로 지정된 경우만 ASC
         Sort.Direction direction = "asc".equalsIgnoreCase(order)
             ? Sort.Direction.ASC
             : Sort.Direction.DESC;
-        
+
         Sort sort = Sort.by(direction, sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
 
