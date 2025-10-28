@@ -13,18 +13,9 @@ import org.ever._4ever_be_alarm.notification.domain.model.constants.Notification
 @Getter
 public class NotificationTarget {
 
-    private UUID id;
-
+    private UUID id; // targetId
     private UUID notificationId;
-
     private NotificationStatusEnum notificationStatus;
-
-    private UUID userId;
-
     private Boolean isRead;
-
     private LocalDateTime readAt;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
