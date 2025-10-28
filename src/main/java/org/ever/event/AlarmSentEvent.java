@@ -9,17 +9,17 @@ import org.ever.event.alarm.LinkType;
 import org.ever.event.alarm.TargetType;
 
 /**
- * 알림 이벤트 클래스
- * 알림 외 서버에서 알림 서버에 알림을 요청하는 경우에 사용한다.
+ * 알림 발송 이벤트 클래스
+ * 알림 서버에서 클라이언트로 알림을 전송하는 경우에 사용한다.
  */
 @Getter
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AlarmEvent extends BaseEvent {
+public class AlarmSentEvent extends BaseEvent {
 
     String alarmId;
-    AlarmType alarmType;
+    AlarmType alarmType;            // source와 구분하기 위해 notificationType으로 명명
     String targetId;
     TargetType targetType;
     String title;
