@@ -1,5 +1,6 @@
 package org.ever.event;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,4 +27,5 @@ public class AlarmEvent extends BaseEvent {
     String message;
     String linkId;
     LinkType linkType;
+    LocalDateTime scheduledAt; // 예약 발송 시간(아직 미구현) -> null 이면 즉시 발송
 }
