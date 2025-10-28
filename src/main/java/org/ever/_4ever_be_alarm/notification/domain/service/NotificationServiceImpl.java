@@ -113,6 +113,8 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
         // TODO: 알림 생성 로직 구현
 
         try {
+            // TODO alarmId가 없을 때는 새로 생성하는 로직 구현
+            // targetId는 필수, linkId는 선택할 수 있도록 구현
             UUID alarmId = UUID.fromString(event.getAlarmId());
             UUID targetId = UUID.fromString(event.getTargetId());
             UUID linkId = UUID.fromString(event.getLinkId());
