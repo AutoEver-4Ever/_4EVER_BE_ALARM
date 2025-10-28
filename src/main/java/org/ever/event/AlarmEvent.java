@@ -20,7 +20,7 @@ import org.ever.event.alarm.TargetType;
 public class AlarmEvent extends BaseEvent {
 
     String alarmId;
-    AlarmType alarmType;
+    AlarmType alarmType; // source와 구분하기 위해 alarm 명명
     String targetId;
     TargetType targetType;
     String title;

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.Getter;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.ReferenceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
+import org.ever.event.alarm.TargetType;
 
 @Data
 @Builder
@@ -15,6 +16,7 @@ public class Noti {
 
     private UUID id;
     private UUID targetId;
+    private TargetType targetType;
     private String title;
     private String message;
     private UUID referenceId;

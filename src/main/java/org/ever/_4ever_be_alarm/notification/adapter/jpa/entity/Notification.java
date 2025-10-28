@@ -62,6 +62,7 @@ public class Notification extends TimeStamp {
 
     @Builder
     public Notification(
+        UUID id, // Notification ID를 외부에서 주입받을 수 있도록 수정
         String title,
         String message,
         UUID referenceId,
@@ -70,6 +71,7 @@ public class Notification extends TimeStamp {
         LocalDateTime sendAt,
         LocalDateTime scheduledAt
     ) {
+        this.id = id;
         this.title = title;
         this.message = message;
         this.referenceId = referenceId;
