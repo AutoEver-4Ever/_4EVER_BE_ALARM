@@ -70,18 +70,23 @@ public class NotificationController {
         @RequestParam(name = "size", required = false, defaultValue = "20")
         Integer size
     ) {
-        log.info(
-            "알림 목록 조회 요청 - userId: {}, sortBy: {}, order: {}, source: {}, page: {}, size: {}",
-            userId, sortBy, order, source, page, size
-        );
+        log.info("[API] 알림 목록 조회 요청 시작 - userId: {}, sortBy: {}, order: {}, source: {}, page: {}, size: {}",
+            userId, sortBy, order, source, page, size);
 
-        var result = notificationQueryUseCase.getNotificationPage(
-            userId, sortBy, order, source, page, size
-        );
+        try {
+            PageResponseDto<NotificationListResponseDto> result = notificationQueryUseCase.getNotificationPage(
+                userId, sortBy, order, source, page, size
+            );
 
-        log.info("알림 목록 조회 성공 - userId: {}, total: {}", userId,
-            result.getPage().getTotalElements());
-        return ResponseEntity.ok(result);
+            log.info("[API] 알림 목록 조회 성공 - userId: {}, totalElements: {}, totalPages: {}",
+                userId, result.getPage().getTotalElements(), result.getPage().getTotalPages());
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("[API] 알림 목록 조회 실패 - userId: {}, Error: {}",
+                userId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -100,15 +105,22 @@ public class NotificationController {
         @RequestParam(name = "status", required = false, defaultValue = "UNREAD")
         String status
     ) {
-        log.info("알림 갯수 조회 요청 - userId: {}, status: {}", userId, status);
+        log.info("[API] 알림 갯수 조회 요청 시작 - userId: {}, status: {}", userId, status);
 
-        NotificationCountResponseDto response = notificationQueryUseCase.getNotificationCount(
-            userId,
-            status
-        );
+        try {
+            NotificationCountResponseDto response = notificationQueryUseCase.getNotificationCount(
+                userId, status
+            );
 
-        log.info("알림 갯수 조회 성공 - userId: {}, count: {}", userId, response.getCount());
-        return ResponseEntity.ok(response);
+            log.info("[API] 알림 갯수 조회 성공 - userId: {}, status: {}, count: {}",
+                userId, status, response.getCount());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("[API] 알림 갯수 조회 실패 - userId: {}, status: {}, Error: {}",
+                userId, status, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -120,22 +132,24 @@ public class NotificationController {
         @RequestBody
         NotificationMarkReadRequestDto request
     ) {
-        log.info(
-            "알림 읽음 처리 요청 - userId: {}, notificationIds: {}",
-            request.getUserId(), request.getNotificationIds()
-        );
+        log.info("[API] 알림 읽음 처리 요청 시작 - userId: {}, notificationCount: {}",
+            request.getUserId(), request.getNotificationIds().size());
 
-        NotificationReadResponseDto response = notificationQueryUseCase.markAsReadList(
-            request.getUserId(),
-            request.getNotificationIds()
-        );
+        try {
+            NotificationReadResponseDto response = notificationQueryUseCase.markAsReadList(
+                request.getUserId(),
+                request.getNotificationIds()
+            );
 
-        log.info(
-            "알림 읽음 처리 성공 - userId: {}, processedCount: {}",
-            request.getUserId(), response.getProcessedCount()
-        );
+            log.info("[API] 알림 읽음 처리 성공 - userId: {}, processedCount: {}, totalRequested: {}",
+                request.getUserId(), response.getProcessedCount(), request.getNotificationIds().size());
+            return ResponseEntity.ok(response);
 
-        return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[API] 알림 읽음 처리 실패 - userId: {}, notificationCount: {}, Error: {}",
+                request.getUserId(), request.getNotificationIds().size(), e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -148,17 +162,20 @@ public class NotificationController {
         NotificationMarkReadAllAndOneRequestDto request
     ) {
         String userId = request.getUserId();
+        log.info("[API] 전체 알림 읽음 처리 요청 시작 - userId: {}", userId);
 
-        log.info("전체 알림 읽음 처리 요청 - userId: {}", userId);
+        try {
+            NotificationReadResponseDto response = notificationQueryUseCase.markAsReadAll(userId);
 
-        NotificationReadResponseDto response = notificationQueryUseCase.markAsReadAll(userId);
+            log.info("[API] 전체 알림 읽음 처리 성공 - userId: {}, processedCount: {}",
+                userId, response.getProcessedCount());
+            return ResponseEntity.ok(response);
 
-        log.info(
-            "전체 알림 읽음 처리 성공 - userId: {}, processedCount: {}",
-            userId, response.getProcessedCount()
-        );
-
-        return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[API] 전체 알림 읽음 처리 실패 - userId: {}, Error: {}",
+                userId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -174,17 +191,20 @@ public class NotificationController {
         NotificationMarkReadAllAndOneRequestDto request
     ) {
         String userId = request.getUserId();
+        log.info("[API] 단일 알림 읽음 처리 요청 시작 - userId: {}, notificationId: {}",
+            userId, notificationId);
 
-        log.info("단일 알림 읽음 처리 요청 - userId: {}, notificationId: {}", userId, notificationId);
+        try {
+            NotificationReadResponseDto response = notificationQueryUseCase.markAsReadOne(userId, notificationId);
 
-        NotificationReadResponseDto
-            response = notificationQueryUseCase.markAsReadOne(userId, notificationId);
+            log.info("[API] 단일 알림 읽음 처리 성공 - userId: {}, notificationId: {}, processedCount: {}",
+                userId, notificationId, response.getProcessedCount());
+            return ResponseEntity.ok(response);
 
-        log.info(
-            "단일 알림 읽음 처리 성공 - userId: {}, notificationId: {}, success: {}",
-            userId, notificationId, response
-        );
-
-        return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[API] 단일 알림 읽음 처리 실패 - userId: {}, notificationId: {}, Error: {}",
+                userId, notificationId, e.getMessage(), e);
+            throw e;
+        }
     }
 }

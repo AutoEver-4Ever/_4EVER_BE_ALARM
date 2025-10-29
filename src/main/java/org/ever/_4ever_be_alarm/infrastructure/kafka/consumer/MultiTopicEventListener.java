@@ -43,88 +43,104 @@ public class MultiTopicEventListener {
         @Header(KafkaHeaders.OFFSET) long offset,
         Acknowledgment acknowledgment
     ) {
-        try {
-            log.info("멀티 토픽 메시지 수신 - Topic: {}, Partition: {}, Offset: {}",
-                topic, partition, offset);
+        log.info("[KAFKA-MULTI] 멀티 토픽 메시지 수신 - Topic: {}, Partition: {}, Offset: {}",
+            topic, partition, offset);
 
+        try {
             // 토픽별로 다른 처리
             switch (topic) {
                 case USER_EVENT_TOPIC:
+                    log.debug("[KAFKA-MULTI] USER_EVENT 처리 시작");
                     handleUserEvent(message);
                     break;
                 case SCM_EVENT_TOPIC:
+                    log.debug("[KAFKA-MULTI] SCM_EVENT 처리 시작");
                     handleScmEvent(message);
                     break;
                 case BUSINESS_EVENT_TOPIC:
+                    log.debug("[KAFKA-MULTI] BUSINESS_EVENT 처리 시작");
                     handleBusinessEvent(message);
                     break;
                 case PAYMENT_EVENT_TOPIC:
+                    log.debug("[KAFKA-MULTI] PAYMENT_EVENT 처리 시작");
                     handlePaymentEvent(message);
                     break;
                 default:
-                    log.warn("알 수 없는 토픽 - Topic: {}", topic);
+                    log.warn("[KAFKA-MULTI] 알 수 없는 토픽 - Topic: {}", topic);
             }
 
             acknowledgment.acknowledge();
-            log.info("멀티 토픽 메시지 처리 완료 - Topic: {}", topic);
+            log.info("[KAFKA-MULTI] 멀티 토픽 메시지 처리 완료 - Topic: {}", topic);
 
         } catch (Exception e) {
-            log.error("멀티 토픽 메시지 처리 실패 - Topic: {}", topic, e);
+            log.error("[KAFKA-MULTI] 멀티 토픽 메시지 처리 실패 - Topic: {}, Error: {}",
+                topic, e.getMessage(), e);
+            // TODO: 에러 발생 시 재시도 또는 DLQ 전송 로직 추가 필요
         }
     }
 
     private void handleUserEvent(String message) {
         try {
+            log.debug("[KAFKA-MULTI] 사용자 이벤트 파싱 시작");
             UserEvent event = objectMapper.readValue(message, UserEvent.class);
-            log.info("사용자 이벤트 처리 중 - UserId: {}, Action: {}", event.getUserId(), event.getAction());
+            log.info("[KAFKA-MULTI] 사용자 이벤트 처리 중 - UserId: {}, Action: {}", 
+                event.getUserId(), event.getAction());
 
-            // User 이벤트 처리 로직
             multiTopicEventHandler.handleUserEvent(event);
+            log.debug("[KAFKA-MULTI] 사용자 이벤트 처리 완료");
 
         } catch (Exception e) {
-            log.error("사용자 이벤트 파싱 실패", e);
+            log.error("[KAFKA-MULTI] 사용자 이벤트 파싱 실패 - Error: {}", e.getMessage(), e);
+            // TODO: 파싱 실패 시 재처리 또는 DLQ 전송
+            throw new RuntimeException("사용자 이벤트 처리 실패", e);
         }
     }
 
     private void handleScmEvent(String message) {
         try {
+            log.debug("[KAFKA-MULTI] SCM 이벤트 파싱 시작");
             ScmEvent event = objectMapper.readValue(message, ScmEvent.class);
-            log.info("SCM 이벤트 처리 중 - OrderId: {}, Action: {}", event.getOrderId(),
-                event.getAction());
+            log.info("[KAFKA-MULTI] SCM 이벤트 처리 중 - OrderId: {}, Action: {}", 
+                event.getOrderId(), event.getAction());
 
-            // SCM 이벤트 처리 로직
             multiTopicEventHandler.handleScmEvent(event);
+            log.debug("[KAFKA-MULTI] SCM 이벤트 처리 완료");
 
         } catch (Exception e) {
-            log.error("SCM 이벤트 파싱 실패", e);
+            log.error("[KAFKA-MULTI] SCM 이벤트 파싱 실패 - Error: {}", e.getMessage(), e);
+            throw new RuntimeException("SCM 이벤트 처리 실패", e);
         }
     }
 
     private void handleBusinessEvent(String message) {
         try {
+            log.debug("[KAFKA-MULTI] 비즈니스 이벤트 파싱 시작");
             BusinessEvent event = objectMapper.readValue(message, BusinessEvent.class);
-            log.info("비즈니스 이벤트 처리 중 - BusinessId: {}, Action: {}",
+            log.info("[KAFKA-MULTI] 비즈니스 이벤트 처리 중 - BusinessId: {}, Action: {}",
                 event.getBusinessId(), event.getAction());
 
-            // Business 이벤트 처리 로직
             multiTopicEventHandler.handleBusinessEvent(event);
+            log.debug("[KAFKA-MULTI] 비즈니스 이벤트 처리 완료");
 
         } catch (Exception e) {
-            log.error("비즈니스 이벤트 파싱 실패", e);
+            log.error("[KAFKA-MULTI] 비즈니스 이벤트 파싱 실패 - Error: {}", e.getMessage(), e);
+            throw new RuntimeException("비즈니스 이벤트 처리 실패", e);
         }
     }
 
     private void handlePaymentEvent(String message) {
         try {
+            log.debug("[KAFKA-MULTI] 결제 이벤트 파싱 시작");
             AlarmEvent event = objectMapper.readValue(message, AlarmEvent.class);
-            log.info("결제 이벤트 처리 중 - EventId: {}, AlarmId: {}", event.getEventId(),
-                event.getAlarmId());
+            log.info("[KAFKA-MULTI] 결제 이벤트 처리 중 - EventId: {}, AlarmId: {}", 
+                event.getEventId(), event.getAlarmId());
 
-            // Payment 이벤트 처리 로직
             multiTopicEventHandler.handleAlarmEvent(event);
+            log.debug("[KAFKA-MULTI] 결제 이벤트 처리 완료");
 
         } catch (Exception e) {
-            log.error("결제 이벤트 파싱 실패", e);
+            log.error("[KAFKA-MULTI] 결제 이벤트 파싱 실패 - Error: {}", e.getMessage(), e);
+            throw new RuntimeException("결제 이벤트 처리 실패", e);
         }
     }
 }
