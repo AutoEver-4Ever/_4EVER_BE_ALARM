@@ -21,52 +21,87 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
     @Override
     public SseEmitter addEmitter(String userId) {
-        SseEmitter emitter = new SseEmitter(emitterTimeout);
-        emitters.put(userId, emitter); // 유저ID를 키로 SseEmitter 저장 고유한 UserID 필요
+        log.info("[SSE] Emitter 추가 시작 - UserId: {}", userId);
+        
+        try {
+            SseEmitter emitter = new SseEmitter(emitterTimeout);
+            
+            log.debug("[SSE] Emitter 생성 완료 - UserId: {}, Timeout: {}ms", userId, emitterTimeout);
+            emitters.put(userId, emitter);
 
-        emitter.onCompletion(() -> {
-            emitters.remove(userId);
-            log.info("SseEmitter completed and removed for userId: {}", userId);
-        });
+            emitter.onCompletion(() -> {
+                emitters.remove(userId);
+                log.info("[SSE] Emitter 완료 및 제거 - UserId: {}", userId);
+            });
 
-        emitter.onTimeout(() -> {
-            emitters.remove(userId);
-            log.info("SseEmitter timed out and removed for userId: {}", userId);
-        });
+            emitter.onTimeout(() -> {
+                emitters.remove(userId);
+                log.warn("[SSE] Emitter 타임아웃 및 제거 - UserId: {}, Timeout: {}ms", 
+                    userId, emitterTimeout);
+            });
 
-        emitter.onError((e) -> {
-            emitters.remove(userId);
-            log.error("SseEmitter error for userId: {}", userId, e);
-        });
+            emitter.onError((e) -> {
+                emitters.remove(userId);
+                log.error("[SSE] Emitter 에러 발생 및 제거 - UserId: {}, Error: {}", 
+                    userId, e.getMessage(), e);
+            });
 
-        return null;
+            log.info("[SSE] Emitter 추가 완료 - UserId: {}", userId);
+            return emitter;
+            
+        } catch (Exception e) {
+            log.error("[SSE] Emitter 추가 실패 - UserId: {}, Error: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("SSE Emitter 추가 실패", e);
+        }
     }
 
     @Override
     public void removeEmitter(String userId) {
-
+        log.info("[SSE] Emitter 제거 시작 - UserId: {}", userId);
+        
+        try {
+            if (emitters.containsKey(userId)) {
+                emitters.remove(userId);
+                log.info("[SSE] Emitter 제거 완료 - UserId: {}", userId);
+            } else {
+                log.warn("[SSE] 제거할 Emitter가 존재하지 않음 - UserId: {}", userId);
+            }
+        } catch (Exception e) {
+            log.error("[SSE] Emitter 제거 실패 - UserId: {}, Error: {}", userId, e.getMessage(), e);
+        }
     }
 
     @Override
     public void sendEvent(String userId, String eventName, Object data) {
-        if (emitters.containsKey(userId)) {
-            SseEmitter emitter = emitters.get(userId);
-            try {
-                SseEventBuilder sseEventBuilder = SseEmitter.event()
-                    .name(eventName)
-                    .data(data);
+        log.debug("[SSE] 이벤트 전송 시작 - UserId: {}, EventName: {}", userId, eventName);
+        
+        if (!emitters.containsKey(userId)) {
+            log.warn("[SSE] 해당 UserId의 Emitter가 존재하지 않음 - UserId: {}", userId);
+            return;
+        }
 
-                emitter.send(sseEventBuilder);
+        SseEmitter emitter = emitters.get(userId);
+        
+        try {
+            SseEventBuilder sseEventBuilder = SseEmitter.event()
+                .name(eventName)
+                .data(data);
 
-                log.info("Sent SSE event to user: {}, name: {}, data: {}", userId, eventName, data);
-            } catch (IOException e) {
-                emitter.completeWithError(e); // 트랜스미션 오류 시 완료 처리
-//                emitter.complete();
-                emitters.remove(userId);
-                log.error("Error sending event to userId: {}, removing emitter", userId, e);
-            }
-        } else {
-            log.warn("No SseEmitter found for userId: {}", userId);
+            emitter.send(sseEventBuilder);
+            log.info("[SSE] 이벤트 전송 완료 - UserId: {}, EventName: {}", userId, eventName);
+
+        } catch (IOException e) {
+            log.error("[SSE] 이벤트 전송 실패 - UserId: {}, EventName: {}, Error: {}",
+                userId, eventName, e.getMessage(), e);
+            
+            emitter.completeWithError(e);
+            emitters.remove(userId);
+            log.info("[SSE] Emitter 제거 완료 - UserId: {}", userId);
+            
+        } catch (Exception e) {
+            log.error("[SSE] 예상치 못한 오류 - UserId: {}, EventName: {}, Error: {}",
+                userId, eventName, e.getMessage(), e);
+            throw new RuntimeException("SSE 이벤트 전송 실패", e);
         }
     }
 }

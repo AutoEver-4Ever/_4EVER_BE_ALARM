@@ -10,10 +10,8 @@ import org.ever._4ever_be_alarm.notification.domain.model.Noti;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
 import org.ever.event.AlarmSentEvent;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("${dispatch.strategy-names.sse}")
 @RequiredArgsConstructor
 public class NotificationEventProducerAdapter implements NotificationDispatchPort {
 
@@ -21,33 +19,37 @@ public class NotificationEventProducerAdapter implements NotificationDispatchPor
 
     @Override
     public void dispatch(Noti notification) {
-        try {
-            log.info("알림 이벤트 전송 시작 - NotificationId: {}, Title: {}",
-                notification.getId(), notification.getTitle());
+        log.info("[DISPATCH-KAFKA] 알림 이벤트 전송 시작 - NotificationId: {}, Title: {}",
+            notification.getId(), notification.getTitle());
 
+        try {
             // Notification을 AlarmEvent로 변환
+            log.debug("[DISPATCH-KAFKA] 이벤트 변환 시작 - NotificationId: {}", notification.getId());
             AlarmSentEvent event = convertToAlarmSentEvent(notification);
+            log.debug("[DISPATCH-KAFKA] 이벤트 변환 완료 - EventId: {}", event.getEventId());
 
             // Gateway로 Kafka 이벤트 전송
-            // TODO: CompletableFuture 결과 처리 로직 개선
+            log.debug("[DISPATCH-KAFKA] Kafka 전송 시작 - Topic: {}, EventId: {}",
+                ALARM_SENT_TOPIC, event.getEventId());
+
             kafkaTemplate.send(ALARM_SENT_TOPIC, event.getAlarmId(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
-                        log.error(
-                            "알림 이벤트 전송 실패 - NotificationId: {}, Error: {}",
+                        log.error("[DISPATCH-KAFKA] 알림 이벤트 전송 실패 - NotificationId: {}, Error: {}",
                             notification.getId(), ex.getMessage(), ex);
-                        // TODO : 실패 처리 로직 추가
+                        // TODO: 실패 처리 로직 추가 (재시도 또는 DLQ)
                     } else {
-                        log.info("알림 이벤트 전송 성공 - NotificationId: {}, Partition: {}, Offset: {}",
+                        log.info(
+                            "[DISPATCH-KAFKA] 알림 이벤트 전송 성공 - NotificationId: {}, Partition: {}, Offset: {}",
                             notification.getId(), result.getRecordMetadata().partition(),
                             result.getRecordMetadata().offset());
-                        // TODO : 성공 처리 로직 추가
                     }
                 });
 
         } catch (Exception e) {
-            log.error("알림 이벤트 전송 중 오류 발생 - NotificationId: {}", notification.getId(), e);
-            // TODO : 예외 처리 로직 추가
+            log.error("[DISPATCH-KAFKA] 알림 이벤트 전송 중 오류 발생 - NotificationId: {}, Error: {}",
+                notification.getId(), e.getMessage(), e);
+            throw new RuntimeException("알림 이벤트 전송 실패", e);
         }
     }
 

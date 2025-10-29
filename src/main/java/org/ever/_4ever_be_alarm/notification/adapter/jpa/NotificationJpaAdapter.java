@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.common.response.PageDto;
 import org.ever._4ever_be_alarm.common.response.PageResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.jpa.entity.Notification;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class NotificationJpaAdapter implements NotificationRepositoryPort {
 
     private final ChannelRepository channelRepository;
@@ -54,59 +56,82 @@ public class NotificationJpaAdapter implements NotificationRepositoryPort {
     @Override
     @Transactional
     public Noti save(Noti alarm) {
-        // TODO Notification(domain) -> Entity 변환 후 저장 로직 구현
+        log.info("[JPA-SAVE] 알림 저장 시작 - notificationId: {}, targetId: {}, source: {}",
+            alarm.getId(), alarm.getTargetId(), alarm.getSource());
 
-        Optional<Source> tempSource = sourceRepository.findBySourceName(
-            SourceTypeEnum.fromString(alarm.getSource().name()));
+        try {
+            // Source 조회
+            Source source = sourceRepository.findBySourceName(
+                SourceTypeEnum.fromString(alarm.getSource().name()))
+                .orElseThrow(() -> {
+                    log.error("[JPA-SAVE] Source를 찾을 수 없음 - source: {}, notificationId: {}",
+                        alarm.getSource(), alarm.getId());
+                    return new IllegalStateException(
+                        String.format("Source를 찾을 수 없습니다: %s", alarm.getSource()));
+                });
 
-        Source source;
-        if (tempSource.isPresent()) {
-            source = tempSource.get();
-        } else {
-            // Source 생성 및 저장을 하면 안되는 이슈가 있어서 주석 처리
-//            Source newSource = Source.builder()
-//                .sourceName(SourceTypeEnum.fromString(alarm.getSource().name()))
-//                .build();
-//            source = sourceRepository.save(newSource);
-            throw new IllegalStateException("Source를 찾을 수 없습니다."); // TODO 예외 처리 개선
+            log.debug("[JPA-SAVE] Source 조회 완료 - sourceId: {}", source.getId());
+
+            // Notification 엔티티 생성 및 저장
+            Notification notification = Notification.builder()
+                .id(alarm.getId())
+                .title(alarm.getTitle())
+                .message(alarm.getMessage())
+                .referenceId(alarm.getReferenceId())
+                .referenceType(alarm.getReferenceType())
+                .source(source)
+                .sendAt(LocalDateTime.now())
+                .scheduledAt(Optional.ofNullable(alarm.getScheduledAt()).orElse(LocalDateTime.now()))
+                .build();
+
+            Notification savedNotification = notificationRepository.save(notification);
+            log.debug("[JPA-SAVE] Notification 저장 완료 - notificationId: {}", savedNotification.getId());
+
+            // NotificationStatus 조회
+            NotificationStatus notificationStatus = notificationStatusRepository.findByStatusName(
+                NotificationStatusEnum.PENDING)
+                .orElseThrow(() -> {
+                    log.error("[JPA-SAVE] NotificationStatus를 찾을 수 없음 - status: PENDING, notificationId: {}",
+                        alarm.getId());
+                    return new IllegalStateException("NotificationStatus를 찾을 수 없습니다: PENDING");
+                });
+
+            log.debug("[JPA-SAVE] NotificationStatus 조회 완료 - statusId: {}", 
+                notificationStatus.getId());
+
+            // NotificationTarget 생성 및 저장
+            NotificationTarget target = NotificationTarget.builder()
+                .notification(savedNotification)
+                .notificationStatus(notificationStatus)
+                .userId(alarm.getTargetId())
+                .build();
+
+            NotificationTarget savedTarget = notificationTargetRepository.save(target);
+            log.debug("[JPA-SAVE] NotificationTarget 저장 완료 - targetId: {}", savedTarget.getId());
+
+            log.info("[JPA-SAVE] 전체 알림 저장 완료 - notificationId: {}, targetId: {}",
+                savedNotification.getId(), savedTarget.getId());
+
+            // Domain 객체로 변환하여 반환
+            return Noti.builder()
+                .id(savedNotification.getId())
+                .targetId(savedTarget.getUserId())
+                .targetType(alarm.getTargetType())
+                .title(savedNotification.getTitle())
+                .message(savedNotification.getMessage())
+                .referenceId(savedNotification.getReferenceId())
+                .referenceType(savedNotification.getReferenceType())
+                .source(SourceTypeEnum.fromString(savedNotification.getSource().getSourceName().name()))
+                .sendAt(savedNotification.getSendAt())
+                .scheduledAt(savedNotification.getScheduledAt())
+                .build();
+
+        } catch (Exception e) {
+            log.error("[JPA-SAVE] 알림 저장 실패 - notificationId: {}, error: {}",
+                alarm.getId(), e.getMessage(), e);
+            // TODO: 예외를 다시 던져서 상위 레이어에서 처리하도록 함
+            throw e;
         }
-
-        Notification notification = Notification.builder()
-            .id(alarm.getId())
-            .title(alarm.getTitle())
-            .message(alarm.getMessage())
-            .referenceId(alarm.getReferenceId())
-            .referenceType(alarm.getReferenceType())
-            .source(source)
-            .sendAt(LocalDateTime.now())
-            .scheduledAt(Optional.ofNullable(alarm.getScheduledAt()).orElse(LocalDateTime.now()))
-            .build();
-
-        notificationRepository.save(notification);
-
-        NotificationStatus notificationStatus = notificationStatusRepository.findByStatusName(
-            NotificationStatusEnum.PENDING).get();
-
-        NotificationTarget target = NotificationTarget.builder()
-            .notification(notification)
-            .notificationStatus(notificationStatus)
-            .userId(alarm.getTargetId())
-            .build();
-
-        notificationTargetRepository.save(target);
-
-        return Noti.builder()
-            .id(notification.getId())
-            .targetId(target.getUserId())
-            .targetType(alarm.getTargetType())
-            .title(notification.getTitle())
-            .message(notification.getMessage())
-            .referenceId(notification.getReferenceId())
-            .referenceType(notification.getReferenceType())
-            .source(SourceTypeEnum.fromString(notification.getSource().getSourceName().name()))
-            .sendAt(notification.getSendAt())
-            .scheduledAt(notification.getScheduledAt())
-            .build();
     }
 
     @Override
