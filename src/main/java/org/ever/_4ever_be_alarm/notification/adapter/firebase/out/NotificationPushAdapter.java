@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ever._4ever_be_alarm.notification.domain.model.Noti;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component("${dispatch.strategy-names.app-push}")
 public class NotificationPushAdapter implements NotificationDispatchPort {
 
     @Override

@@ -10,10 +10,8 @@ import org.ever._4ever_be_alarm.notification.domain.model.Noti;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
 import org.ever.event.AlarmSentEvent;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("${dispatch.strategy-names.sse}")
 @RequiredArgsConstructor
 public class NotificationEventProducerAdapter implements NotificationDispatchPort {
 
@@ -31,9 +29,9 @@ public class NotificationEventProducerAdapter implements NotificationDispatchPor
             log.debug("[DISPATCH-KAFKA] 이벤트 변환 완료 - EventId: {}", event.getEventId());
 
             // Gateway로 Kafka 이벤트 전송
-            log.debug("[DISPATCH-KAFKA] Kafka 전송 시작 - Topic: {}, EventId: {}", 
+            log.debug("[DISPATCH-KAFKA] Kafka 전송 시작 - Topic: {}, EventId: {}",
                 ALARM_SENT_TOPIC, event.getEventId());
-            
+
             kafkaTemplate.send(ALARM_SENT_TOPIC, event.getAlarmId(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
@@ -41,7 +39,8 @@ public class NotificationEventProducerAdapter implements NotificationDispatchPor
                             notification.getId(), ex.getMessage(), ex);
                         // TODO: 실패 처리 로직 추가 (재시도 또는 DLQ)
                     } else {
-                        log.info("[DISPATCH-KAFKA] 알림 이벤트 전송 성공 - NotificationId: {}, Partition: {}, Offset: {}",
+                        log.info(
+                            "[DISPATCH-KAFKA] 알림 이벤트 전송 성공 - NotificationId: {}, Partition: {}, Offset: {}",
                             notification.getId(), result.getRecordMetadata().partition(),
                             result.getRecordMetadata().offset());
                     }

@@ -16,10 +16,10 @@ import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationQueryUse
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationSendUseCase;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationRepositoryPort;
+import org.ever._4ever_be_alarm.notification.domain.port.out.strategy.DispatchStrategy;
 import org.ever.event.AlarmEvent;
 import org.ever.event.StatusEvent;
 import org.ever.event.alarm.TargetType;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +30,6 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
 
     private final NotificationRepositoryPort notificationRepository;
     private final Map<String, NotificationDispatchPort> notificationDispatchPorts;
-    @Value("${dispatch.strategy-names.sse}")
-    private String SSE_STRATEGY_NAME;
-    @Value("${dispatch.strategy-names.app-push}")
-    private String APP_PUSH_STRATEGY_NAME;
 
     @Transactional(readOnly = true)
     @Override
@@ -222,12 +218,12 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
                     notification.getId());
 
                 NotificationDispatchPort pushAlarm = notificationDispatchPorts
-                    .get(APP_PUSH_STRATEGY_NAME);
+                    .get(DispatchStrategy.APP_PUSH.getBeanName());
 
                 if (pushAlarm == null) {
                     log.error(
                         "[NOTIFICATION-DISPATCH] PUSH 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
-                        APP_PUSH_STRATEGY_NAME, notification.getId());
+                        DispatchStrategy.APP_PUSH.getBeanName(), notification.getId());
                     // TODO: PUSH 어댑터 없을 때 처리 로직 추가 필요
                 } else {
                     pushAlarm.dispatch(notification);
@@ -241,12 +237,13 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
             log.info("[NOTIFICATION-DISPATCH] SSE 알림 발송 시작 - notificationId: {}",
                 notification.getId());
 
-            NotificationDispatchPort sseEmitter = notificationDispatchPorts.get(SSE_STRATEGY_NAME);
+            NotificationDispatchPort sseEmitter = notificationDispatchPorts
+                .get(DispatchStrategy.SSE.getBeanName());
 
             if (sseEmitter == null) {
                 log.error(
                     "[NOTIFICATION-DISPATCH] SSE 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
-                    SSE_STRATEGY_NAME, notification.getId());
+                    DispatchStrategy.SSE.getBeanName(), notification.getId());
                 // TODO: SSE 어댑터 없을 때 처리 로직 추가 필요
             } else {
                 sseEmitter.dispatch(notification);
