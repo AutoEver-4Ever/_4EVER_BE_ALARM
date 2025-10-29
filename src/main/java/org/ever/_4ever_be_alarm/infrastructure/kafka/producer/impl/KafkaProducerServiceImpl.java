@@ -47,7 +47,7 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
 
     @Override
     public CompletableFuture<SendResult<String, Object>> sendAlarmEvent(AlarmEvent event) {
-        return sendEvent(ALARM_SENT_TOPIC, event.getUserId(), event);
+        return sendEvent(ALARM_SENT_TOPIC, event.getEventId(), event);
     }
 
     @Override

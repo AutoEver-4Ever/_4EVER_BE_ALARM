@@ -14,8 +14,8 @@ public class AlarmEventHandlerImpl implements AlarmEventHandler {
     @Override
     public void handleAlarmRequest(AlarmEvent event) {
         // 실제 결제 요청 처리 로직 구현
-        log.debug("결제 요청 처리 중 - OrderId: {}, Amount: {}",
-            event.getOrderId(), event.getAmount());
+        log.debug("결제 요청 처리 중 - EventId: {}, AlarmId: {}",
+            event.getEventId(), event.getAlarmId());
 
         // TODO: 실제 비즈니스 로직 구현
         // 1. 결제 정보 검증
