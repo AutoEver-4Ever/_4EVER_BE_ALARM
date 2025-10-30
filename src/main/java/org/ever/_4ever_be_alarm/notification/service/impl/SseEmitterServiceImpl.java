@@ -16,7 +16,7 @@ public class SseEmitterServiceImpl implements SseEmitterService {
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     //    @Value("${sse.emitter.timeout:3600_000}") // 기본값 1시간
-    private Long emitterTimeout = 3600_000L;
+    private final Long emitterTimeout = 3600_000L;
 
     @Override
     public SseEmitter addEmitter(String userId) {
