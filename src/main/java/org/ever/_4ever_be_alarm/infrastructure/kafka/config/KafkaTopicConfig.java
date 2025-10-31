@@ -9,15 +9,18 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaTopicConfig {
 
     // 알람 서비스 토픽 (생산)
-    public static final String ALARM_SENT_TOPIC = "alarm-sent";
-    public static final String ALARM_FAILED_TOPIC = "alarm-failed";
-    public static final String ALARM_REQUEST_TOPIC = "alarm-request";
+    public static final String ALARM_SENT_TOPIC = "alarm-sent"; // 알림 발송
+    public static final String ALARM_REQUEST_STATUS_TOPIC = "alarm-request-status"; // 알림 요청 상태
+    //    public static final String ALARM_FAILED_TOPIC = "alarm-failed";
 
     // 다른 서비스 이벤트 토픽 (소비)
     public static final String PAYMENT_EVENT_TOPIC = "payment-event";
     public static final String USER_EVENT_TOPIC = "user-event";
     public static final String SCM_EVENT_TOPIC = "scm-event";
     public static final String BUSINESS_EVENT_TOPIC = "business-event";
+
+    public static final String ALARM_REQUEST_TOPIC = "alarm-request"; // 알림 요청
+    public static final String ALARM_SENT_STATUS_TOPIC = "alarm-sent-status"; // 알림 발송 상태
 
     @Bean
     public NewTopic alarmSentTopic() {
@@ -27,13 +30,13 @@ public class KafkaTopicConfig {
             .build();
     }
 
-    @Bean
-    public NewTopic alarmFailedTopic() {
-        return TopicBuilder.name(ALARM_FAILED_TOPIC)
-            .partitions(3)
-            .replicas(1)
-            .build();
-    }
+//    @Bean
+//    public NewTopic alarmFailedTopic() {
+//        return TopicBuilder.name(ALARM_FAILED_TOPIC)
+//            .partitions(3)
+//            .replicas(1)
+//            .build();
+//    }
 
     @Bean
     public NewTopic alarmRequestTopic() {

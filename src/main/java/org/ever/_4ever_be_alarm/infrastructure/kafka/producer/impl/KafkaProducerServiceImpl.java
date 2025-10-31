@@ -27,27 +27,37 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
     @Override
     public CompletableFuture<SendResult<String, Object>> sendAlarmEvent(String topic,
         AlarmEvent event) {
+        log.debug("[KAFKA-PRODUCER] 알림 이벤트 전송 시작 - Topic: {}, AlarmId: {}", 
+            topic, event.getAlarmId());
         return sendEvent(topic, event.getAlarmId(), event);
     }
 
     @Override
     public CompletableFuture<SendResult<String, Object>> sendUserEvent(UserEvent event) {
+        log.debug("[KAFKA-PRODUCER] 사용자 이벤트 전송 시작 - UserId: {}, Action: {}", 
+            event.getUserId(), event.getAction());
         return sendEvent(USER_EVENT_TOPIC, event.getUserId(), event);
     }
 
     @Override
     public CompletableFuture<SendResult<String, Object>> sendScmEvent(ScmEvent event) {
+        log.debug("[KAFKA-PRODUCER] SCM 이벤트 전송 시작 - OrderId: {}, Action: {}", 
+            event.getOrderId(), event.getAction());
         return sendEvent(SCM_EVENT_TOPIC, event.getOrderId(), event);
     }
 
     @Override
     public CompletableFuture<SendResult<String, Object>> sendBusinessEvent(BusinessEvent event) {
+        log.debug("[KAFKA-PRODUCER] 비즈니스 이벤트 전송 시작 - BusinessId: {}, Action: {}", 
+            event.getBusinessId(), event.getAction());
         return sendEvent(BUSINESS_EVENT_TOPIC, event.getBusinessId(), event);
     }
 
     @Override
     public CompletableFuture<SendResult<String, Object>> sendAlarmEvent(AlarmEvent event) {
-        return sendEvent(ALARM_SENT_TOPIC, event.getUserId(), event);
+        log.debug("[KAFKA-PRODUCER] 알림 이벤트 전송 시작 - EventId: {}, AlarmId: {}", 
+            event.getEventId(), event.getAlarmId());
+        return sendEvent(ALARM_SENT_TOPIC, event.getEventId(), event);
     }
 
     @Override
@@ -67,23 +77,29 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
      */
     private CompletableFuture<SendResult<String, Object>> sendEvent(String topic, String key,
         Object event) {
-        log.info("이벤트 발행 시작 - Topic: {}, Key: {}, EventType: {}",
+        log.info("[KAFKA-PRODUCER] 이벤트 발행 시작 - Topic: {}, Key: {}, EventType: {}",
             topic, key, event.getClass().getSimpleName());
 
-        CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key,
-            event);
+        try {
+            CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key,
+                event);
 
-        future.whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("이벤트 발행 실패 - Topic: {}, Key: {}, Error: {}",
-                    topic, key, ex.getMessage(), ex);
-            } else {
-                log.info("이벤트 발행 성공 - Topic: {}, Partition: {}, Offset: {}",
-                    topic, result.getRecordMetadata().partition(),
-                    result.getRecordMetadata().offset());
-            }
-        });
+            future.whenComplete((result, ex) -> {
+                if (ex != null) {
+                    log.error("[KAFKA-PRODUCER] 이벤트 발행 실패 - Topic: {}, Key: {}, Error: {}",
+                        topic, key, ex.getMessage(), ex);
+                } else {
+                    log.info("[KAFKA-PRODUCER] 이벤트 발행 성공 - Topic: {}, Partition: {}, Offset: {}",
+                        topic, result.getRecordMetadata().partition(),
+                        result.getRecordMetadata().offset());
+                }
+            });
 
-        return future;
+            return future;
+        } catch (Exception e) {
+            log.error("[KAFKA-PRODUCER] 이벤트 발행 중 예외 발생 - Topic: {}, Key: {}, Error: {}",
+                topic, key, e.getMessage(), e);
+            throw e;
+        }
     }
 }
