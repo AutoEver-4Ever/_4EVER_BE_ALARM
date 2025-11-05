@@ -200,7 +200,7 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
         if (event.getSource() == null || event.getSource().isBlank()) {
             throw new IllegalArgumentException("source는 필수입니다.");
         }
-        log.debug("[VALIDATION] 필수 필드 검증 통과");
+        log.info("[VALIDATION] 필수 필드 검증 통과");
     }
 
     /**
@@ -209,7 +209,7 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
      * TODO: 발송 성공 여부를 DB에 기록하는 로직 추가 필요
      */
     public void dispatchNotification(Noti notification) {
-        log.debug("[NOTIFICATION-DISPATCH] 발송 전략 결정 - targetType: {}, notificationId: {}",
+        log.info("[NOTIFICATION-DISPATCH] 발송 전략 결정 - targetType: {}, notificationId: {}",
             notification.getTargetType(), notification.getId());
 
         try {

@@ -1,5 +1,6 @@
 package org.ever._4ever_be_alarm.notification.adapter.web.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,11 +20,14 @@ public class DeviceTokenRegisterRequestDto {
 
     @ValidUuidV7
     @NotBlank(message = "userId는 필수입니다.")
+    @JsonProperty("userId")
     private String userId;
 
     @NotBlank(message = "fcmToken은 필수입니다.")
+    @JsonProperty("token")
     private String fcmToken;
 
+    @JsonProperty("deviceId")
     private String deviceId;
 
     @AllowedValues(
