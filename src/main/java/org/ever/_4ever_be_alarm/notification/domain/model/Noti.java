@@ -24,4 +24,7 @@ public class Noti {
     private SourceTypeEnum source;
     private LocalDateTime sendAt;
     private LocalDateTime scheduledAt;
+
+    // FCM 푸시 알림 전송용 토큰 (dispatch 시점에 주입됨)
+    private String fcmToken;
 }

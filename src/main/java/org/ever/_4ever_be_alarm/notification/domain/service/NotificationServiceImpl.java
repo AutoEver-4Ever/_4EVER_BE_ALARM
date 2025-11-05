@@ -10,12 +10,14 @@ import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.Notificati
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationListResponseDto;
 import org.ever._4ever_be_alarm.notification.adapter.web.dto.response.NotificationReadResponseDto;
 import org.ever._4ever_be_alarm.notification.domain.model.Noti;
+import org.ever._4ever_be_alarm.notification.domain.model.UserDeviceInfo;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.ReferenceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.model.constants.SourceTypeEnum;
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationQueryUseCase;
 import org.ever._4ever_be_alarm.notification.domain.port.in.NotificationSendUseCase;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationDispatchPort;
 import org.ever._4ever_be_alarm.notification.domain.port.out.NotificationRepositoryPort;
+import org.ever._4ever_be_alarm.notification.domain.port.out.UserDeviceTokenRepositoryPort;
 import org.ever._4ever_be_alarm.notification.domain.port.out.strategy.DispatchStrategy;
 import org.ever.event.AlarmEvent;
 import org.ever.event.StatusEvent;
@@ -30,6 +32,7 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
 
     private final NotificationRepositoryPort notificationRepository;
     private final Map<String, NotificationDispatchPort> notificationDispatchPorts;
+    private final UserDeviceTokenRepositoryPort userDeviceTokenRepository;
 
     @Transactional(readOnly = true)
     @Override
@@ -197,7 +200,7 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
         if (event.getSource() == null || event.getSource().isBlank()) {
             throw new IllegalArgumentException("source는 필수입니다.");
         }
-        log.debug("[VALIDATION] 필수 필드 검증 통과");
+        log.info("[VALIDATION] 필수 필드 검증 통과");
     }
 
     /**
@@ -206,50 +209,17 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
      * TODO: 발송 성공 여부를 DB에 기록하는 로직 추가 필요
      */
     public void dispatchNotification(Noti notification) {
-        log.debug("[NOTIFICATION-DISPATCH] 발송 전략 결정 - targetType: {}, notificationId: {}",
+        log.info("[NOTIFICATION-DISPATCH] 발송 전략 결정 - targetType: {}, notificationId: {}",
             notification.getTargetType(), notification.getId());
 
         try {
             // 외부 대상(CUSTOMER, SUPPLIER)에게는 PUSH 알림 발송
             if (notification.getTargetType() == TargetType.CUSTOMER
                 || notification.getTargetType() == TargetType.SUPPLIER) {
-
-                log.info("[NOTIFICATION-DISPATCH] PUSH 알림 발송 시작 - notificationId: {}",
-                    notification.getId());
-
-                NotificationDispatchPort pushAlarm = notificationDispatchPorts
-                    .get(DispatchStrategy.APP_PUSH.getBeanName());
-
-                if (pushAlarm == null) {
-                    log.error(
-                        "[NOTIFICATION-DISPATCH] PUSH 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
-                        DispatchStrategy.APP_PUSH.getBeanName(), notification.getId());
-                    // TODO: PUSH 어댑터 없을 때 처리 로직 추가 필요
-                } else {
-                    pushAlarm.dispatch(notification);
-                    log.info("[NOTIFICATION-DISPATCH] PUSH 알림 발송 완료 - notificationId: {}",
-                        notification.getId());
-                }
+                sendPushNotification(notification);
             }
 
-            // 내부 사용자(EMPLOYEE)에게는 SSE 알림 발송
-            // TODO: EMPLOYEE일 때만 SSE 발송하도록 조건 추가 검토 필요
-            log.info("[NOTIFICATION-DISPATCH] SSE 알림 발송 시작 - notificationId: {}",
-                notification.getId());
-
-            NotificationDispatchPort sseEmitter = notificationDispatchPorts
-                .get(DispatchStrategy.SSE.getBeanName());
-
-            if (sseEmitter == null) {
-                log.error(
-                    "[NOTIFICATION-DISPATCH] SSE 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
-                    DispatchStrategy.SSE.getBeanName(), notification.getId());
-                // TODO: SSE 어댑터 없을 때 처리 로직 추가 필요
-            } else {
-                sseEmitter.dispatch(notification);
-                log.info("[NOTIFICATION-DISPATCH] SSE 알림 발송 완료 - notificationId: {}",
-                    notification.getId());
-            }
+            sendSseNotification(notification);
 
         } catch (Exception e) {
             log.error("[NOTIFICATION-DISPATCH] 알림 발송 실패 - notificationId: {}, error: {}",
@@ -265,6 +235,77 @@ public class NotificationServiceImpl implements NotificationQueryUseCase, Notifi
     public void updateNotificationStatus(StatusEvent event) {
         // TODO: 알림 상태 업데이트 로직 구현
 //        notificationRepository.updateNotificationStatus(event.getEventId(), event.isSuccess());
+    }
+
+    private void sendPushNotification(Noti notification) {
+        // 외부 사용자(CUSTOMER, SUPPLIER)에게는 PUSH 알림 발송
+        log.info("[NOTIFICATION-DISPATCH] PUSH 알림 발송 시작 - notificationId: {}, targetId: {}",
+            notification.getId(), notification.getTargetId());
+
+        // FCM 토큰 조회
+        List<UserDeviceInfo> tokens = userDeviceTokenRepository
+            .findActiveTokensByUserId(notification.getTargetId());
+
+        if (tokens == null || tokens.isEmpty()) {
+            log.warn(
+                "[NOTIFICATION-DISPATCH] 등록된 FCM 토큰이 없습니다 - notificationId: {}, targetId: {}, 알림 전송 종료",
+                notification.getId(), notification.getTargetId());
+            return;
+        }
+
+        log.info(
+            "[NOTIFICATION-DISPATCH] FCM 토큰 조회 완료 - notificationId: {}, tokenCount: {}",
+            notification.getId(), tokens.size());
+
+        NotificationDispatchPort pushAlarm = notificationDispatchPorts
+            .get(DispatchStrategy.APP_PUSH.getBeanName());
+
+        if (pushAlarm == null) {
+            log.error(
+                "[NOTIFICATION-DISPATCH] PUSH 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
+                DispatchStrategy.APP_PUSH.getBeanName(), notification.getId());
+            // TODO: PUSH 어댑터 없을 때 처리 로직 추가 필요
+        } else {
+            // 각 토큰에 대해 푸시 알림 발송
+            for (UserDeviceInfo token : tokens) {
+                try {
+                    // Noti 객체에 FCM 토큰 설정
+                    notification.setFcmToken(token.getFcmToken());
+
+                    pushAlarm.dispatch(notification);
+
+                    log.info(
+                        "[NOTIFICATION-DISPATCH] PUSH 알림 발송 완료 - notificationId: {}, tokenId: {}",
+                        notification.getId(), token.getId());
+                } catch (Exception e) {
+                    log.error(
+                        "[NOTIFICATION-DISPATCH] PUSH 알림 발송 실패 (개별 토큰) - notificationId: {}, tokenId: {}, error: {}",
+                        notification.getId(), token.getId(), e.getMessage(), e);
+                    // TODO: 실패 로그 수집하여 별도 처리 로직 추가 가능
+                }
+            }
+        }
+    }
+
+    private void sendSseNotification(Noti notification) {
+        // 내부 사용자(EMPLOYEE) & 외부 사용자(CUSTOMER, SUPPLIER)에게는 SSE 알림 발송
+        // TODO: EMPLOYEE일 때만 SSE 발송하도록 조건 추가 검토 필요
+        log.info("[NOTIFICATION-DISPATCH] SSE 알림 발송 시작 - notificationId: {}",
+            notification.getId());
+
+        NotificationDispatchPort sseEmitter = notificationDispatchPorts
+            .get(DispatchStrategy.SSE.getBeanName());
+
+        if (sseEmitter == null) {
+            log.error(
+                "[NOTIFICATION-DISPATCH] SSE 어댑터를 찾을 수 없음 - strategy: {}, notificationId: {}",
+                DispatchStrategy.SSE.getBeanName(), notification.getId());
+            // TODO: SSE 어댑터 없을 때 처리 로직 추가 필요
+        } else {
+            sseEmitter.dispatch(notification);
+            log.info("[NOTIFICATION-DISPATCH] SSE 알림 발송 완료 - notificationId: {}",
+                notification.getId());
+        }
     }
 
 
